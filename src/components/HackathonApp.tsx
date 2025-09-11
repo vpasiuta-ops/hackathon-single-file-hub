@@ -5,7 +5,7 @@ import HomePage from "@/pages/HomePage";
 import HackathonsPage from "@/pages/HackathonsPage";
 import ParticipantsPage from "@/pages/ParticipantsPage";
 import TeamsPage from "@/pages/TeamsPage";
-import DashboardPage from "@/pages/DashboardPage";
+import ProfilePage from "@/pages/ProfilePage";
 import LeaderboardPage from "@/pages/LeaderboardPage";
 import HackathonDetailsPage from "@/pages/HackathonDetailsPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,12 @@ export default function HackathonApp() {
     
     if (user && profile && !profile.is_profile_complete) {
       navigate('/complete-profile');
+      return;
+    }
+    
+    // Redirect to hackathons after successful login
+    if (user && profile && profile.is_profile_complete && currentPage === 'home') {
+      setCurrentPage('hackathons');
       return;
     }
     
@@ -87,13 +93,7 @@ export default function HackathonApp() {
           />
         );
       case 'dashboard':
-        return (
-          <DashboardPage
-            currentRole={currentRole}
-            onRoleChange={setCurrentRole}
-            onPageChange={handlePageChange}
-          />
-        );
+        return <ProfilePage />;
       case 'leaderboard':
         return (
           <LeaderboardPage

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,10 @@ import {
 } from "lucide-react";
 import { hackathons } from "@/data/mockData";
 import type { UserRole } from "@/data/mockData";
+import { useAuth } from '@/hooks/useAuth';
+import { useTeams } from '@/hooks/useTeams';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface HackathonDetailsPageProps {
   hackathonId: number | null;
@@ -26,7 +31,68 @@ interface HackathonDetailsPageProps {
 }
 
 export default function HackathonDetailsPage({ hackathonId, currentRole, onBack }: HackathonDetailsPageProps) {
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  
   const hackathon = hackathons.find(h => h.id === hackathonId);
+  const { user } = useAuth();
+  const { userTeam, isUserTeamCaptain } = useTeams();
+  const { toast } = useToast();
+
+  // Check if team is registered for this hackathon
+  useEffect(() => {
+    const checkRegistration = async () => {
+      if (!userTeam) return;
+      
+      const { data } = await supabase
+        .from('hackathon_registrations')
+        .select('id')
+        .eq('team_id', userTeam.id)
+        .eq('hackathon_id', hackathonId?.toString())
+        .maybeSingle();
+      
+      setIsRegistered(!!data);
+    };
+
+    checkRegistration();
+  }, [userTeam, hackathonId]);
+
+  const handleRegisterTeam = async () => {
+    if (!user || !userTeam || !isUserTeamCaptain) {
+      toast({
+        title: 'Помилка',
+        description: 'Тільки капітан команди може зареєструвати команду',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsRegistering(true);
+    
+    const { error } = await supabase
+      .from('hackathon_registrations')
+      .insert([{
+        hackathon_id: hackathonId?.toString(),
+        team_id: userTeam.id,
+        registered_by: user.id
+      }]);
+
+    if (error) {
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося зареєструвати команду',
+        variant: 'destructive'
+      });
+    } else {
+      toast({
+        title: 'Успішно!',
+        description: 'Команду зареєстровано на хакатон'
+      });
+      setIsRegistered(true);
+    }
+    
+    setIsRegistering(false);
+  };
 
   if (!hackathon) {
     return (
@@ -114,16 +180,59 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
               </div>
             </div>
             
-            {hackathon.status !== 'Завершений' && currentRole !== 'guest' && (
+            {hackathon.status !== 'Завершений' && user && (
               <div className="flex-shrink-0">
                 <Card className="bg-gradient-card border-primary/20">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-foreground mb-4">
                       {hackathon.status === 'Активний' ? 'Взяти участь' : 'Зареєструватися'}
                     </h3>
-                    <Button variant="hero" size="lg" className="w-full">
-                      {hackathon.status === 'Активний' ? 'Приєднатися' : 'Зареєструватися'}
-                    </Button>
+                    
+                    {!userTeam ? (
+                      <div className="text-center">
+                        <p className="text-sm text-foreground-secondary mb-3">
+                          Для участі потрібна команда
+                        </p>
+                        <Button variant="outline" size="lg" className="w-full" disabled>
+                          Створіть команду спочатку
+                        </Button>
+                      </div>
+                    ) : !isUserTeamCaptain ? (
+                      <div className="text-center">
+                        <p className="text-sm text-foreground-secondary mb-3">
+                          Тільки капітан може зареєструвати команду
+                        </p>
+                        <Button variant="outline" size="lg" className="w-full" disabled>
+                          Тільки для капітанів
+                        </Button>
+                      </div>
+                    ) : isRegistered ? (
+                      <div className="text-center">
+                        <Badge className="bg-green-500 text-white mb-3">
+                          Команда зареєстрована
+                        </Badge>
+                        <p className="text-sm text-foreground-secondary">
+                          Ваша команда "{userTeam.name}" вже зареєстрована
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <Button 
+                          variant="hero" 
+                          size="lg" 
+                          className="w-full"
+                          onClick={handleRegisterTeam}
+                          disabled={isRegistering}
+                        >
+                          {isRegistering ? 'Реєструємо...' : 
+                           hackathon.status === 'Активний' ? 'Зареєструвати команду' : 'Зареєструвати команду'}
+                        </Button>
+                        <p className="text-xs text-foreground-secondary mt-2 text-center">
+                          Команда: {userTeam.name}
+                        </p>
+                      </>
+                    )}
+                    
                     <p className="text-xs text-foreground-secondary mt-2 text-center">
                       Дедлайн: {formatDate(hackathon.registrationDeadline)}
                     </p>

@@ -14,6 +14,94 @@ export type Database = {
   }
   public: {
     Tables: {
+      hackathon_registrations: {
+        Row: {
+          hackathon_id: string
+          id: string
+          registered_at: string
+          registered_by: string
+          team_id: string
+        }
+        Insert: {
+          hackathon_id: string
+          id?: string
+          registered_at?: string
+          registered_by: string
+          team_id: string
+        }
+        Update: {
+          hackathon_id?: string
+          id?: string
+          registered_at?: string
+          registered_by?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hackathon_registrations_hackathon_id_fkey"
+            columns: ["hackathon_id"]
+            isOneToOne: false
+            referencedRelation: "hackathons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hackathon_registrations_registered_by_fkey"
+            columns: ["registered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "hackathon_registrations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hackathons: {
+        Row: {
+          created_at: string
+          description: string
+          end_date: string
+          id: string
+          max_team_size: number | null
+          registration_deadline: string
+          short_description: string | null
+          start_date: string
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          end_date: string
+          id?: string
+          max_team_size?: number | null
+          registration_deadline: string
+          short_description?: string | null
+          start_date: string
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          end_date?: string
+          id?: string
+          max_team_size?: number | null
+          registration_deadline?: string
+          short_description?: string | null
+          start_date?: string
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bio: string | null
@@ -55,6 +143,83 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      team_members: {
+        Row: {
+          id: string
+          joined_at: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          captain_id: string
+          created_at: string
+          description: string
+          id: string
+          looking_for: string[] | null
+          name: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          captain_id: string
+          created_at?: string
+          description: string
+          id?: string
+          looking_for?: string[] | null
+          name: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          captain_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          looking_for?: string[] | null
+          name?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_captain_id_fkey"
+            columns: ["captain_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {

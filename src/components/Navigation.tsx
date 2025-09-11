@@ -67,7 +67,7 @@ export default function Navigation({ currentPage, onPageChange, currentRole, onR
     { id: 'hackathons', label: 'Хакатони', icon: Calendar, public: false },
     { id: 'participants', label: 'Учасники', icon: Users, public: false },
     { id: 'teams', label: 'Команди', icon: UserCheck, public: false },
-    { id: 'dashboard', label: 'Кабінет', icon: Settings, public: false },
+    { id: 'dashboard', label: 'Профіль', icon: User, public: false },
     { id: 'leaderboard', label: 'Лідерборд', icon: Trophy, public: false },
   ];
 
