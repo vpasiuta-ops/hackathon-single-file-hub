@@ -2,23 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Users, UserPlus, Crown } from "lucide-react";
-import type { Team, User } from "@/data/mockData";
+import type { Team } from "@/hooks/useTeams";
 
 interface TeamCardProps {
   team: Team;
-  members: User[];
-  captain: User;
   showJoinAction?: boolean;
-  onJoinTeam?: (teamId: number) => void;
+  onJoinTeam?: () => void;
 }
 
-const statusColors = {
-  'формується': 'bg-amber-500',
-  'готова': 'bg-green-500',
-  'учасник хакатону': 'bg-blue-500',
-};
+export default function TeamCard({ team, showJoinAction = false, onJoinTeam }: TeamCardProps) {
+  const statusColors: Record<string, string> = {
+    'формується': 'bg-amber-500',
+    'готова': 'bg-green-500',
+    'учасник хакатону': 'bg-blue-500',
+  };
 
-export default function TeamCard({ team, members, captain, showJoinAction = false, onJoinTeam }: TeamCardProps) {
   return (
     <Card className="bg-gradient-card border-border hover:shadow-hover transition-all duration-300 group">
       <CardHeader className="pb-3">
@@ -30,13 +28,13 @@ export default function TeamCard({ team, members, captain, showJoinAction = fals
             <div className="flex items-center gap-2 mt-1">
               <Badge 
                 variant="secondary" 
-                className={`${statusColors[team.status]} text-white border-none`}
+                className={`${statusColors[team.status || 'формується']} text-white border-none`}
               >
-                {team.status}
+                {team.status || 'формується'}
               </Badge>
               <div className="flex items-center text-sm text-foreground-secondary">
                 <Users className="w-4 h-4 mr-1" />
-                {members.length}/{team.lookingFor.length + members.length}
+                {team.member_count || 1}/{(team.looking_for?.length || 0) + (team.member_count || 1)}
               </div>
             </div>
           </div>
@@ -49,40 +47,44 @@ export default function TeamCard({ team, members, captain, showJoinAction = fals
         </p>
 
         {/* Captain */}
-        <div className="mb-3">
-          <h4 className="text-xs font-medium text-foreground-secondary mb-2 flex items-center gap-1">
-            <Crown className="w-3 h-3" />
-            Капітан
-          </h4>
-          <div className="flex items-center gap-2">
-            <img 
-              src={captain.avatar} 
-              alt={captain.name}
-              className="w-8 h-8 rounded-full"
-            />
-            <span className="text-sm font-medium">{captain.name}</span>
+        {team.captain && (
+          <div className="mb-3">
+            <h4 className="text-xs font-medium text-foreground-secondary mb-2 flex items-center gap-1">
+              <Crown className="w-3 h-3" />
+              Капітан
+            </h4>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-medium">
+                  {team.captain.first_name?.[0]}{team.captain.last_name?.[0]}
+                </span>
+              </div>
+              <span className="text-sm font-medium">
+                {team.captain.first_name} {team.captain.last_name}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Members */}
-        {members.length > 1 && (
+        {team.members && team.members.length > 0 && (
           <div className="mb-3">
             <h4 className="text-xs font-medium text-foreground-secondary mb-2">
-              Учасники ({members.length - 1})
+              Учасники ({team.members.length})
             </h4>
             <div className="flex -space-x-2">
-              {members.filter(m => m.id !== captain.id).slice(0, 3).map((member, index) => (
-                <img 
-                  key={member.id}
-                  src={member.avatar} 
-                  alt={member.name}
-                  className="w-8 h-8 rounded-full border-2 border-card"
-                  title={member.name}
-                />
+              {team.members.slice(0, 3).map((member, index) => (
+                <div 
+                  key={member.user_id}
+                  className="w-8 h-8 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-xs font-medium"
+                  title={`${member.first_name} ${member.last_name}`}
+                >
+                  {member.first_name?.[0]}{member.last_name?.[0]}
+                </div>
               ))}
-              {members.length > 4 && (
+              {team.members.length > 3 && (
                 <div className="w-8 h-8 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-xs font-medium">
-                  +{members.length - 4}
+                  +{team.members.length - 3}
                 </div>
               )}
             </div>
@@ -90,13 +92,13 @@ export default function TeamCard({ team, members, captain, showJoinAction = fals
         )}
 
         {/* Looking for */}
-        {team.lookingFor.length > 0 && (
+        {team.looking_for && team.looking_for.length > 0 && (
           <div>
             <h4 className="text-xs font-medium text-foreground-secondary mb-2">
               Шукаємо
             </h4>
             <div className="flex flex-wrap gap-1">
-              {team.lookingFor.map((role, index) => (
+              {team.looking_for.map((role, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
                   {role}
                 </Badge>
@@ -107,11 +109,11 @@ export default function TeamCard({ team, members, captain, showJoinAction = fals
       </CardContent>
 
       <CardFooter className="pt-0">
-        {showJoinAction && team.lookingFor.length > 0 && (
+        {showJoinAction && team.looking_for && team.looking_for.length > 0 && (
           <Button 
             size="sm" 
             variant="default"
-            onClick={() => onJoinTeam?.(team.id)}
+            onClick={onJoinTeam}
             className="w-full"
           >
             <UserPlus className="w-4 h-4 mr-2" />

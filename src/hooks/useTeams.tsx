@@ -232,6 +232,114 @@ export function useTeams() {
 
   const isUserTeamCaptain = userTeam ? userTeam.captain_id === user?.id : false;
 
+  const applyToTeam = async (teamId: string, message?: string) => {
+    if (!user) throw new Error('User must be logged in');
+    
+    const { error } = await supabase
+      .from('team_applications')
+      .insert({
+        team_id: teamId,
+        user_id: user.id,
+        message: message || ''
+      });
+      
+    if (error) throw error;
+    return { success: true };
+  };
+
+  const respondToApplication = async (applicationId: string, status: 'accepted' | 'rejected') => {
+    if (!user) throw new Error('User must be logged in');
+    
+    const { error } = await supabase
+      .from('team_applications')
+      .update({ status })
+      .eq('id', applicationId);
+      
+    if (error) throw error;
+    
+    // If accepted, add user to team
+    if (status === 'accepted') {
+      const { data: application } = await supabase
+        .from('team_applications')
+        .select('team_id, user_id')
+        .eq('id', applicationId)
+        .maybeSingle();
+        
+      if (application) {
+        await supabase
+          .from('team_members')
+          .insert({
+            team_id: application.team_id,
+            user_id: application.user_id
+          });
+      }
+    }
+    
+    return { success: true };
+  };
+
+  const getUserApplications = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('team_applications')
+      .select(`
+        id,
+        team_id,
+        status,
+        created_at,
+        teams:team_id (
+          id,
+          name,
+          description
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    return data || [];
+  };
+
+  const getTeamApplications = async (teamId: string) => {
+    const { data, error } = await supabase
+      .from('team_applications')
+      .select(`
+        id,
+        user_id,
+        message,
+        status,
+        created_at
+      `)
+      .eq('team_id', teamId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    
+    // Fetch profile data separately to avoid foreign key issues
+    const applicationsWithProfiles = await Promise.all(
+      (data || []).map(async (app) => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, bio, skills, technologies')
+          .eq('user_id', app.user_id)
+          .single();
+          
+        return {
+          ...app,
+          profiles: profile || {
+            first_name: '',
+            last_name: '',
+            bio: null,
+            skills: null,
+            technologies: null
+          }
+        };
+      })
+    );
+    
+    return applicationsWithProfiles;
+  };
+
   return {
     teams,
     userTeam,
@@ -240,6 +348,10 @@ export function useTeams() {
     createTeam,
     updateTeam,
     joinTeam,
+    applyToTeam,
+    respondToApplication,
+    getUserApplications,
+    getTeamApplications,
     refetch: () => Promise.all([fetchTeams(), fetchUserTeam()])
   };
 }

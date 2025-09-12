@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useTeams } from '@/hooks/useTeams';
 import CreateTeamDialog from '@/components/CreateTeamDialog';
+import TeamManagementSection from '@/components/TeamManagementSection';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
@@ -388,13 +389,8 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {isUserTeamCaptain && (
-                    <div className="pt-2">
-                      <Button variant="outline" size="sm">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Керувати командою
-                      </Button>
-                    </div>
+                  {isUserTeamCaptain && userTeam && (
+                    <TeamManagementSection team={userTeam} isUserTeamCaptain={isUserTeamCaptain} />
                   )}
                 </div>
               </div>

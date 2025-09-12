@@ -1,24 +1,28 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Plus, Users as UsersIcon } from "lucide-react";
 import TeamCard from "@/components/TeamCard";
-import { teams, users, getTeamMembers } from "@/data/mockData";
-import type { UserRole } from "@/data/mockData";
+import CreateTeamDialog from "@/components/CreateTeamDialog";
+import { useTeams } from "@/hooks/useTeams";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
-interface TeamsPageProps {
-  currentRole: UserRole;
-}
-
-export default function TeamsPage({ currentRole }: TeamsPageProps) {
+export default function TeamsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  
+  const navigate = useNavigate();
+  const { teams, loading, applyToTeam, userTeam } = useTeams();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const filteredTeams = teams.filter(team => {
     const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          team.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         team.lookingFor.some(role => role.toLowerCase().includes(searchTerm.toLowerCase()));
+                         team.looking_for.some(role => role.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = !statusFilter || team.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -29,9 +33,29 @@ export default function TeamsPage({ currentRole }: TeamsPageProps) {
     'учасник хакатону': teams.filter(t => t.status === 'учасник хакатону').length,
   };
 
-  const handleJoinTeam = (teamId: number) => {
-    console.log('Join team:', teamId);
-    // Тут буде логіка подачі заявки на вступ до команди
+  const handleApplyToTeam = async (teamId: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    try {
+      await applyToTeam(teamId);
+      toast({
+        title: 'Заявку надіслано!',
+        description: 'Ваша заявка відправлена капітану команди'
+      });
+    } catch (error) {
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося надіслати заявку',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleTeamClick = (teamId: string) => {
+    navigate(`/team/${teamId}`);
   };
 
   return (
@@ -49,11 +73,13 @@ export default function TeamsPage({ currentRole }: TeamsPageProps) {
               </p>
             </div>
             
-            {(currentRole === 'participant' || currentRole === 'captain') && (
-              <Button variant="default" size="lg">
-                <Plus className="w-4 h-4 mr-2" />
-                Створити команду
-              </Button>
+            {user && !userTeam && (
+              <CreateTeamDialog>
+                <Button variant="default" size="lg">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Створити команду
+                </Button>
+              </CreateTeamDialog>
             )}
           </div>
         </div>
@@ -82,7 +108,7 @@ export default function TeamsPage({ currentRole }: TeamsPageProps) {
                   size="sm"
                   onClick={() => setStatusFilter(null)}
                 >
-                  Всі ({teams.length})
+                 Всі ({teams.length})
                 </Button>
                 {Object.entries(statusCounts).map(([status, count]) => (
                   <Button
@@ -127,23 +153,23 @@ export default function TeamsPage({ currentRole }: TeamsPageProps) {
               </p>
             </div>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTeams.map((team) => {
-                const members = getTeamMembers(team.id);
-                const captain = users.find(u => u.id === team.captain)!;
-                
-                return (
-                  <TeamCard
-                    key={team.id}
-                    team={team}
-                    members={members}
-                    captain={captain}
-                    showJoinAction={currentRole === 'participant' && team.lookingFor.length > 0}
-                    onJoinTeam={handleJoinTeam}
-                  />
-                );
-              })}
-            </div>
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-foreground-secondary">Завантаження...</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTeams.map((team) => (
+                  <div key={team.id} onClick={() => handleTeamClick(team.id)} className="cursor-pointer">
+                    <TeamCard
+                      team={team}
+                      showJoinAction={user && !userTeam && team.looking_for.length > 0}
+                      onJoinTeam={() => handleApplyToTeam(team.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

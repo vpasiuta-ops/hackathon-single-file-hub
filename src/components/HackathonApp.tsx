@@ -5,6 +5,7 @@ import HomePage from "@/pages/HomePage";
 import HackathonsPage from "@/pages/HackathonsPage";
 import ParticipantsPage from "@/pages/ParticipantsPage";
 import TeamsPage from "@/pages/TeamsPage";
+import TeamDetailPage from "@/pages/TeamDetailPage";
 import ProfilePage from "@/pages/ProfilePage";
 import LeaderboardPage from "@/pages/LeaderboardPage";
 import HackathonDetailsPage from "@/pages/HackathonDetailsPage";
@@ -52,6 +53,10 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
     }
   };
 
+  const handleViewTeam = (teamId: string) => {
+    navigate(`/team/${teamId}`);
+  };
+
   const handleViewHackathon = (id: number) => {
     // Check if user is authenticated
     if (!user) {
@@ -87,12 +92,10 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
           />
         );
       case 'teams':
-        return (
-          <TeamsPage
-            currentRole={currentRole}
-          />
-        );
-      case 'dashboard':
+        return <TeamsPage />;
+        case 'team-detail':
+          return <TeamDetailPage />;
+        case 'dashboard':
         return <ProfilePage />;
       case 'leaderboard':
         return (
