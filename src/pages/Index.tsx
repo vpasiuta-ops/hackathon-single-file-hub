@@ -13,8 +13,9 @@ const Index = () => {
       return null;
     }
     
+    // For authenticated users, pass isAuthenticated prop to redirect to hackathons
     if (user && (!profile || profile.is_profile_complete)) {
-      return <HackathonApp />;
+      return <HackathonApp isAuthenticated={true} />;
     }
     
     if (window.location.pathname === '/auth') {
@@ -34,7 +35,8 @@ const Index = () => {
     );
   }
 
-  return <HackathonApp />;
+  // For unauthenticated users, show landing page
+  return <HackathonApp isAuthenticated={false} />;
 };
 
 export default Index;

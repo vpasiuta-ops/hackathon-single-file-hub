@@ -11,8 +11,13 @@ import HackathonDetailsPage from "@/pages/HackathonDetailsPage";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserRole } from "@/data/mockData";
 
-export default function HackathonApp() {
-  const [currentPage, setCurrentPage] = useState('home');
+interface HackathonAppProps {
+  isAuthenticated: boolean;
+}
+
+export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
+  // Start with correct page based on auth status
+  const [currentPage, setCurrentPage] = useState(isAuthenticated ? 'hackathons' : 'home');
   const [currentRole, setCurrentRole] = useState<UserRole>('guest');
   const [selectedHackathonId, setSelectedHackathonId] = useState<number | null>(null);
   const { user, profile, loading } = useAuth();
@@ -27,12 +32,7 @@ export default function HackathonApp() {
       return;
     }
     
-    // Redirect to hackathons after successful login
-    if (user && profile && profile.is_profile_complete && currentPage === 'home') {
-      setCurrentPage('hackathons');
-      return;
-    }
-    
+    // Redirect unauthenticated users trying to access protected routes
     if (!user && currentPage !== 'home') {
       navigate('/auth');
       return;
