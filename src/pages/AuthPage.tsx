@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ export default function AuthPage() {
   
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +44,8 @@ export default function AuthPage() {
           title: 'Успішно!',
           description: 'Ви успішно увійшли в систему'
         });
+        // Redirect to home page (which will redirect to hackathons for authenticated users)
+        navigate('/');
       }
     } catch (error) {
       toast({
