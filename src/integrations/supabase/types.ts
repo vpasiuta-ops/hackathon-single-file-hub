@@ -106,12 +106,22 @@ export type Database = {
         Row: {
           bio: string | null
           created_at: string
+          existing_team_name: string | null
+          experience_level: string | null
           first_name: string | null
           id: string
+          interested_categories: string[] | null
           is_profile_complete: boolean
           last_name: string | null
+          location: string | null
+          looking_for_roles: string[] | null
+          participation_status: string | null
           phone: string | null
+          portfolio_url: string | null
+          ready_to_lead: boolean | null
+          roles: string[] | null
           skills: string[] | null
+          team_description: string | null
           technologies: string[] | null
           updated_at: string
           user_id: string
@@ -119,12 +129,22 @@ export type Database = {
         Insert: {
           bio?: string | null
           created_at?: string
+          existing_team_name?: string | null
+          experience_level?: string | null
           first_name?: string | null
           id?: string
+          interested_categories?: string[] | null
           is_profile_complete?: boolean
           last_name?: string | null
+          location?: string | null
+          looking_for_roles?: string[] | null
+          participation_status?: string | null
           phone?: string | null
+          portfolio_url?: string | null
+          ready_to_lead?: boolean | null
+          roles?: string[] | null
           skills?: string[] | null
+          team_description?: string | null
           technologies?: string[] | null
           updated_at?: string
           user_id: string
@@ -132,15 +152,52 @@ export type Database = {
         Update: {
           bio?: string | null
           created_at?: string
+          existing_team_name?: string | null
+          experience_level?: string | null
           first_name?: string | null
           id?: string
+          interested_categories?: string[] | null
           is_profile_complete?: boolean
           last_name?: string | null
+          location?: string | null
+          looking_for_roles?: string[] | null
+          participation_status?: string | null
           phone?: string | null
+          portfolio_url?: string | null
+          ready_to_lead?: boolean | null
+          roles?: string[] | null
           skills?: string[] | null
+          team_description?: string | null
           technologies?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      registration_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
         }
         Relationships: []
       }

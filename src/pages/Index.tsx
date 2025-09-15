@@ -1,28 +1,13 @@
-import { useNavigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/toaster";
 import HackathonApp from "@/components/HackathonApp";
+import AuthPage from "@/pages/AuthPage";
+import RegistrationPage from "@/pages/RegistrationPage";
+import ProfileCompletionPage from "@/pages/ProfileCompletionPage";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { user, profile, loading } = useAuth();
-  
-  // Handle authentication redirects
-  if (!loading) {
-    if (user && profile && !profile.is_profile_complete) {
-      navigate('/complete-profile');
-      return null;
-    }
-    
-    // For authenticated users, pass isAuthenticated prop to redirect to hackathons
-    if (user && (!profile || profile.is_profile_complete)) {
-      return <HackathonApp isAuthenticated={true} />;
-    }
-    
-    if (window.location.pathname === '/auth') {
-      navigate('/auth');
-      return null;
-    }
-  }
+  const { loading } = useAuth();
   
   if (loading) {
     return (
@@ -35,8 +20,17 @@ const Index = () => {
     );
   }
 
-  // For unauthenticated users, show landing page
-  return <HackathonApp isAuthenticated={false} />;
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Routes>
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/register" element={<RegistrationPage />} />
+        <Route path="/complete-profile" element={<ProfileCompletionPage />} />
+        <Route path="/*" element={<HackathonApp isAuthenticated={false} />} />
+      </Routes>
+      <Toaster />
+    </div>
+  );
 };
 
 export default Index;

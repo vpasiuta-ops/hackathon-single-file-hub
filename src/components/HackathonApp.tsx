@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
 import Navigation from "./Navigation";
 import HomePage from "@/pages/HomePage";
 import HackathonsPage from "@/pages/HackathonsPage";
@@ -9,6 +10,7 @@ import TeamDetailPage from "@/pages/TeamDetailPage";
 import ProfilePage from "@/pages/ProfilePage";
 import LeaderboardPage from "@/pages/LeaderboardPage";
 import HackathonDetailsPage from "@/pages/HackathonDetailsPage";
+import RegistrationPage from "@/pages/RegistrationPage";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserRole } from "@/data/mockData";
 
@@ -17,6 +19,14 @@ interface HackathonAppProps {
 }
 
 export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
+  // Check if current route is registration page
+  const isRegistrationPage = window.location.pathname.startsWith('/register');
+  
+  // If on registration page, render only the registration component
+  if (isRegistrationPage) {
+    return <RegistrationPage />;
+  }
+  
   // Start with correct page based on auth status
   const [currentPage, setCurrentPage] = useState(isAuthenticated ? 'hackathons' : 'home');
   const [currentRole, setCurrentRole] = useState<UserRole>('guest');
@@ -145,6 +155,7 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
       <main>
         {renderCurrentPage()}
       </main>
+      <Toaster />
     </div>
   );
 }
