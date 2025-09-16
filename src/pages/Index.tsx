@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import HackathonApp from "@/components/HackathonApp";
 import AuthPage from "@/pages/AuthPage";
 import RegistrationPage from "@/pages/RegistrationPage";
+import AdminPage from "@/pages/AdminPage";
 import ProfileCompletionPage from "@/pages/ProfileCompletionPage";
 
 const Index = () => {
@@ -25,6 +26,7 @@ const Index = () => {
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/register" element={<RegistrationPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/complete-profile" element={<ProfileCompletionPage />} />
         <Route path="/*" element={<HackathonApp isAuthenticated={false} />} />
       </Routes>

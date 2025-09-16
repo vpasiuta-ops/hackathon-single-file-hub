@@ -11,6 +11,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import LeaderboardPage from "@/pages/LeaderboardPage";
 import HackathonDetailsPage from "@/pages/HackathonDetailsPage";
 import RegistrationPage from "@/pages/RegistrationPage";
+import AdminPage from "@/pages/AdminPage";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserRole } from "@/data/mockData";
 
@@ -103,9 +104,11 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
         );
       case 'teams':
         return <TeamsPage />;
-        case 'team-detail':
-          return <TeamDetailPage />;
-        case 'dashboard':
+      case 'team-detail':
+        return <TeamDetailPage />;
+      case 'admin':
+        return <AdminPage />;
+      case 'dashboard':
         return <ProfilePage />;
       case 'leaderboard':
         return (
