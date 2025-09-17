@@ -1,109 +1,29 @@
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  User, 
   Crown, 
   Users, 
-  Settings,
   Plus,
-  Github,
   Phone,
   Mail,
   Edit,
-  Save,
-  X
+  ExternalLink,
+  MapPin,
+  Briefcase,
+  Target
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeams } from '@/hooks/useTeams';
 import CreateTeamDialog from '@/components/CreateTeamDialog';
 import TeamManagementSection from '@/components/TeamManagementSection';
-import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfilePage() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({
-    first_name: '',
-    last_name: '',
-    phone: '',
-    bio: '',
-    technologies: [] as string[],
-    skills: [] as string[]
-  });
-  const [currentTech, setCurrentTech] = useState('');
-  const [currentSkill, setCurrentSkill] = useState('');
-
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile } = useAuth();
   const { userTeam, isUserTeamCaptain, loading: teamsLoading } = useTeams();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (profile) {
-      setEditData({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        phone: profile.phone || '',
-        bio: profile.bio || '',
-        technologies: profile.technologies || [],
-        skills: profile.skills || []
-      });
-    }
-  }, [profile]);
-
-  const handleSave = async () => {
-    const { error } = await updateProfile(editData);
-    if (error) {
-      toast({
-        title: 'Помилка',
-        description: 'Не вдалося оновити профіль',
-        variant: 'destructive'
-      });
-    } else {
-      toast({
-        title: 'Успішно!',
-        description: 'Профіль оновлено'
-      });
-      setIsEditing(false);
-    }
-  };
-
-  const addTechnology = () => {
-    if (currentTech.trim() && !editData.technologies.includes(currentTech.trim())) {
-      setEditData(prev => ({
-        ...prev,
-        technologies: [...prev.technologies, currentTech.trim()]
-      }));
-      setCurrentTech('');
-    }
-  };
-
-  const addSkill = () => {
-    if (currentSkill.trim() && !editData.skills.includes(currentSkill.trim())) {
-      setEditData(prev => ({
-        ...prev,
-        skills: [...prev.skills, currentSkill.trim()]
-      }));
-      setCurrentSkill('');
-    }
-  };
-
-  const removeTechnology = (tech: string) => {
-    setEditData(prev => ({
-      ...prev,
-      technologies: prev.technologies.filter(t => t !== tech)
-    }));
-  };
-
-  const removeSkill = (skill: string) => {
-    setEditData(prev => ({
-      ...prev,
-      skills: prev.skills.filter(s => s !== skill)
-    }));
-  };
+  const navigate = useNavigate();
 
   const getUserInitials = () => {
     const firstName = profile?.first_name || '';
@@ -113,6 +33,23 @@ export default function ProfilePage() {
 
   const getUserFullName = () => {
     return `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Користувач';
+  };
+
+  const getExperienceLevel = () => {
+    const levels = {
+      'beginner': 'Початковий',
+      'intermediate': 'Середній',
+      'advanced': 'Досвідчений'
+    };
+    return levels[profile?.experience_level as keyof typeof levels] || profile?.experience_level;
+  };
+
+  const getParticipationStatus = () => {
+    const statuses = {
+      'looking_for_team': 'Шукаю команду',
+      'have_team': 'У мене вже є команда'
+    };
+    return statuses[profile?.participation_status as keyof typeof statuses] || profile?.participation_status;
   };
 
   if (!user || !profile) {
@@ -133,196 +70,185 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold text-foreground">Мій профіль</h1>
           <Button 
             variant="outline"
-            onClick={() => {
-              if (isEditing) {
-                setIsEditing(false);
-                setEditData({
-                  first_name: profile.first_name || '',
-                  last_name: profile.last_name || '',
-                  phone: profile.phone || '',
-                  bio: profile.bio || '',
-                  technologies: profile.technologies || [],
-                  skills: profile.skills || []
-                });
-              } else {
-                setIsEditing(true);
-              }
-            }}
+            onClick={() => navigate('/create-profile')}
           >
-            {isEditing ? <X className="w-4 h-4 mr-2" /> : <Edit className="w-4 h-4 mr-2" />}
-            {isEditing ? 'Скасувати' : 'Редагувати'}
+            <Edit className="w-4 h-4 mr-2" />
+            Редагувати профіль
           </Button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {/* Profile Info */}
-          <Card className="md:col-span-1">
+        <div className="space-y-6">
+          {/* Основна інформація */}
+          <Card>
             <CardHeader>
-              <div className="flex flex-col items-center text-center">
-                <Avatar className="w-20 h-20 mb-4">
+              <CardTitle>Основна інформація</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-6">
+                <Avatar className="w-20 h-20">
                   <AvatarImage src="" alt={getUserFullName()} />
                   <AvatarFallback className="text-lg">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
                 
-                {isEditing ? (
-                  <div className="w-full space-y-2">
-                    <Input
-                      placeholder="Ім'я"
-                      value={editData.first_name}
-                      onChange={(e) => setEditData(prev => ({ ...prev, first_name: e.target.value }))}
-                    />
-                    <Input
-                      placeholder="Прізвище"
-                      value={editData.last_name}
-                      onChange={(e) => setEditData(prev => ({ ...prev, last_name: e.target.value }))}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="font-semibold text-foreground text-lg">
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-foreground mb-2">
                       {getUserFullName()}
                     </h3>
-                    <div className="flex items-center gap-2 text-sm text-foreground-secondary mb-2">
-                      <Mail className="w-4 h-4" />
-                      {user.email}
-                    </div>
-                  </>
-                )}
+                    {profile.experience_level && (
+                      <Badge variant="secondary" className="mb-2">
+                        {getExperienceLevel()}
+                      </Badge>
+                    )}
+                    {profile.participation_status && (
+                      <div className="flex items-center gap-2 text-sm text-foreground-secondary">
+                        <Users className="w-4 h-4" />
+                        {getParticipationStatus()}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </CardHeader>
-            
-            <CardContent>
-              {isEditing ? (
-                <div className="space-y-4">
-                  <Input
-                    placeholder="Номер телефону"
-                    value={editData.phone}
-                    onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))}
-                  />
-                  <Textarea 
-                    placeholder="Розкажіть про себе..."
-                    value={editData.bio}
-                    onChange={(e) => setEditData(prev => ({ ...prev, bio: e.target.value }))}
-                    rows={3}
-                  />
-                  <Button className="w-full" onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Зберегти
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {profile.phone && (
-                    <div className="flex items-center gap-2 text-sm text-foreground-secondary">
-                      <Phone className="w-4 h-4" />
-                      {profile.phone}
-                    </div>
-                  )}
-                  {profile.bio && (
-                    <p className="text-sm text-foreground-secondary">{profile.bio}</p>
-                  )}
-                </div>
-              )}
             </CardContent>
           </Card>
 
-          {/* Skills & Technologies */}
-          <Card className="md:col-span-2">
+          {/* Контактна інформація */}
+          <Card>
             <CardHeader>
-              <CardTitle>Навички та технології</CardTitle>
+              <CardTitle>Контактна інформація</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {/* Technologies */}
-                <div>
-                  <h4 className="font-medium mb-2">Технології</h4>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Додати технологію"
-                          value={currentTech}
-                          onChange={(e) => setCurrentTech(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTechnology())}
-                        />
-                        <Button onClick={addTechnology} size="icon" variant="outline">
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {editData.technologies.map((tech, index) => (
-                          <Badge key={index} variant="outline" className="flex items-center gap-1">
-                            {tech}
-                            <button
-                              onClick={() => removeTechnology(tech)}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {profile.technologies?.length ? (
-                        profile.technologies.map((tech, index) => (
-                          <Badge key={index} variant="outline">{tech}</Badge>
-                        ))
-                      ) : (
-                        <p className="text-sm text-foreground-secondary">Не вказано</p>
-                      )}
-                    </div>
-                  )}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="w-4 h-4 text-foreground-secondary" />
+                  <span>{user.email}</span>
                 </div>
                 
-                {/* Skills */}
-                <div>
-                  <h4 className="font-medium mb-2">Навички</h4>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Додати навичку"
-                          value={currentSkill}
-                          onChange={(e) => setCurrentSkill(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                        />
-                        <Button onClick={addSkill} size="icon" variant="outline">
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {editData.skills.map((skill, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            {skill}
-                            <button
-                              onClick={() => removeSkill(skill)}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {profile.skills?.length ? (
-                        profile.skills.map((skill, index) => (
-                          <Badge key={index} variant="secondary">{skill}</Badge>
-                        ))
-                      ) : (
-                        <p className="text-sm text-foreground-secondary">Не вказано</p>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {profile.phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-foreground-secondary" />
+                    <span>{profile.phone}</span>
+                  </div>
+                )}
+                
+                {profile.portfolio_url && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <ExternalLink className="w-4 h-4 text-foreground-secondary" />
+                    <a 
+                      href={profile.portfolio_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      Портфоліо / GitHub / LinkedIn
+                    </a>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
+
+          {/* Професійна інформація */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Професійна інформація</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {profile.roles && profile.roles.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      Ролі
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.roles.map((role, index) => (
+                        <Badge key={index} variant="outline">{role}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {profile.skills && profile.skills.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2">Навички</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.skills.map((skill, index) => (
+                        <Badge key={index} variant="secondary">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {profile.bio && (
+                  <div>
+                    <h4 className="font-medium mb-2">Коротко про себе</h4>
+                    <p className="text-foreground-secondary">{profile.bio}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Додаткова інформація */}
+          {(profile.ready_to_lead !== null || profile.location || (profile.interested_categories && profile.interested_categories.length > 0) || profile.looking_for_roles?.length || profile.team_description) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Додаткова інформація</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {profile.ready_to_lead !== null && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Crown className="w-4 h-4 text-foreground-secondary" />
+                      <span>Готовність бути капітаном: {profile.ready_to_lead ? 'Так' : 'Ні'}</span>
+                    </div>
+                  )}
+                  
+                  {profile.location && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="w-4 h-4 text-foreground-secondary" />
+                      <span>{profile.location}</span>
+                    </div>
+                  )}
+                  
+                  {profile.looking_for_roles && profile.looking_for_roles.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Шукає в команду</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.looking_for_roles.map((role, index) => (
+                          <Badge key={index} variant="outline">{role}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {profile.team_description && (
+                    <div className="flex items-start gap-2 text-sm">
+                      <Target className="w-4 h-4 text-foreground-secondary mt-1" />
+                      <div>
+                        <div className="font-medium mb-1">Опис команди</div>
+                        <div className="text-foreground-secondary">{profile.team_description}</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {profile.interested_categories && profile.interested_categories.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Бажані кейси для роботи</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.interested_categories.map((category, index) => (
+                          <Badge key={index} variant="outline">{category}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Team Section */}
