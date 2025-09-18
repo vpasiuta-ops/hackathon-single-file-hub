@@ -28,6 +28,12 @@ export default function ProfileCompletionPage() {
     privacy_consent: false,
     email_consent: false,
     
+    // Поля для команди (коли "У мене вже є команда")
+    team_name: '',
+    team_composition: '',
+    looking_for_roles: [] as string[],
+    team_description: '',
+    
     // Необов'язкові поля
     bio: '',
     timezone: '',
@@ -101,6 +107,19 @@ export default function ProfileCompletionPage() {
       newErrors.email_consent = 'Потрібна згода на отримання email-сповіщень';
     }
 
+    // Валідація полів команди (якщо обрано "У мене вже є команда")
+    if (formData.participation_status === 'have_team') {
+      if (!formData.team_name.trim()) {
+        newErrors.team_name = 'Назва команди є обов\'язковою';
+      }
+      if (formData.team_name.length > 50) {
+        newErrors.team_name = 'Назва команди не може перевищувати 50 символів';
+      }
+      if (!formData.team_composition.trim()) {
+        newErrors.team_composition = 'Склад команди є обов\'язковим';
+      }
+    }
+
     // Необов'язкові поля з валідацією
     if (formData.bio && formData.bio.length > 300) {
       newErrors.bio = 'Опис не може перевищувати 300 символів';
@@ -141,6 +160,20 @@ export default function ProfileCompletionPage() {
     }
   };
 
+  const handleLookingForRoleChange = (role: string, checked: boolean) => {
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        looking_for_roles: [...prev.looking_for_roles, role]
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        looking_for_roles: prev.looking_for_roles.filter(r => r !== role)
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -173,7 +206,11 @@ export default function ProfileCompletionPage() {
         portfolio_url: formData.portfolio_url,
         location: formData.location,
         ready_to_lead: formData.ready_to_lead === 'Так',
-        interested_categories: formData.interested_categories
+        interested_categories: formData.interested_categories,
+        // Додаткові поля для команди
+        existing_team_name: formData.participation_status === 'have_team' ? formData.team_name : null,
+        team_description: formData.participation_status === 'have_team' ? formData.team_description : null,
+        looking_for_roles: formData.participation_status === 'have_team' ? formData.looking_for_roles : []
       };
       
       const { error } = await completeProfile(profileData);
@@ -318,7 +355,7 @@ export default function ProfileCompletionPage() {
                   </div>
                 </div>
 
-                {/* Статус участі */}
+                 {/* Статус участі */}
                 <div className="space-y-2">
                   <Label>
                     <Users className="w-4 h-4 inline mr-2" />
@@ -340,6 +377,99 @@ export default function ProfileCompletionPage() {
                   </RadioGroup>
                   {errors.participation_status && <p className="text-sm text-destructive">{errors.participation_status}</p>}
                 </div>
+
+                {/* Динамічний блок для реєстрації команди */}
+                {formData.participation_status === 'have_team' && (
+                  <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30 animate-accordion-down">
+                    <h4 className="font-medium text-foreground flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Інформація про команду
+                    </h4>
+
+                    {/* Назва команди */}
+                    <div className="space-y-2">
+                      <Label htmlFor="team_name">
+                        Назва команди *
+                      </Label>
+                      <Input
+                        id="team_name"
+                        type="text"
+                        placeholder="Введіть назву вашої команди"
+                        value={formData.team_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, team_name: e.target.value }))}
+                        maxLength={50}
+                        className={errors.team_name ? "border-destructive" : ""}
+                      />
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          {formData.team_name.length}/50 символів
+                        </span>
+                        {errors.team_name && <p className="text-sm text-destructive">{errors.team_name}</p>}
+                      </div>
+                    </div>
+
+                    {/* Склад команди */}
+                    <div className="space-y-2">
+                      <Label htmlFor="team_composition">
+                        Склад команди *
+                      </Label>
+                      <Textarea
+                        id="team_composition"
+                        placeholder="Вкажіть список учасників: ім'я + e-mail + роль кожного. Мінімум 2 учасники. Ви можете додати інших пізніше."
+                        value={formData.team_composition}
+                        onChange={(e) => setFormData(prev => ({ ...prev, team_composition: e.target.value }))}
+                        rows={4}
+                        className={errors.team_composition ? "border-destructive" : ""}
+                      />
+                      {errors.team_composition && <p className="text-sm text-destructive">{errors.team_composition}</p>}
+                    </div>
+
+                    {/* Інструкція про капітана */}
+                    <div className="p-3 bg-muted rounded-md">
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Капітан команди:</strong> Вкажіть у списку вище, хто є капітаном.
+                      </p>
+                    </div>
+
+                    {/* Кого шукаємо в команду */}
+                    <div className="space-y-3">
+                      <Label>
+                        Кого шукаємо в команду
+                      </Label>
+                      
+                      {/* Ролі */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Ролі:</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {roleOptions.map((role) => (
+                            <div key={role} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`looking-for-${role}`}
+                                checked={formData.looking_for_roles.includes(role)}
+                                onCheckedChange={(checked) => handleLookingForRoleChange(role, checked as boolean)}
+                              />
+                              <Label htmlFor={`looking-for-${role}`} className="text-sm">{role}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Короткий опис */}
+                      <div className="space-y-2">
+                        <Label htmlFor="team_description">
+                          Короткий опис:
+                        </Label>
+                        <Textarea
+                          id="team_description"
+                          placeholder="Опишіть, яких людей ви шукаєте, які навички потрібні..."
+                          value={formData.team_description}
+                          onChange={(e) => setFormData(prev => ({ ...prev, team_description: e.target.value }))}
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Ролі */}
                 <div className="space-y-2">
