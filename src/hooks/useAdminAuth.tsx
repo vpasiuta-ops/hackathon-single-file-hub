@@ -23,14 +23,20 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if admin is logged in from localStorage
     const storedAdmin = localStorage.getItem('adminUser');
     if (storedAdmin) {
       try {
-        setAdminUser(JSON.parse(storedAdmin));
+        const parsedAdmin = JSON.parse(storedAdmin);
+        // Додаємо перевірку на наявність ключових полів
+        if (parsedAdmin && parsedAdmin.id && parsedAdmin.email) {
+          setAdminUser(parsedAdmin);
+        } else {
+          // Якщо дані некоректні, чистимо їх
+          localStorage.removeItem('adminUser');
+        }
       } catch (error) {
         console.error("Failed to parse admin user from localStorage", error);
-        localStorage.removeItem('adminUser'); // Clear corrupted data
+        localStorage.removeItem('adminUser'); // Чистимо пошкоджені дані
       }
     }
     setLoading(false);
