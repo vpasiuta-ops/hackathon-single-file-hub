@@ -118,32 +118,6 @@ export default function TeamsManagement() {
     }
   };
 
-  const handleDeleteTeam = async (teamId: string) => {
-    try {
-      const { error } = await supabase
-        .from('teams')
-        .delete()
-        .eq('id', teamId);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Успішно',
-        description: 'Команду видалено'
-      });
-
-      await fetchTeams();
-      setTeamToDelete(null);
-    } catch (error: any) {
-      console.error('Error deleting team:', error);
-      toast({
-        title: 'Помилка',
-        description: error.message || 'Не вдалося видалити команду',
-        variant: 'destructive'
-      });
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       name: '',
@@ -156,17 +130,21 @@ export default function TeamsManagement() {
 
   const handleCreateTeam = async () => {
     try {
-      const { error } = await supabase
-        .from('teams')
-        .insert({
-          name: formData.name,
-          description: formData.description,
-          status: formData.status,
-          captain_id: formData.captain_id,
-          looking_for: formData.looking_for.split(',').map(s => s.trim()).filter(Boolean)
-        });
+      const { data, error } = await supabase.functions.invoke('admin-teams', {
+        body: {
+          action: 'create',
+          teamData: {
+            name: formData.name,
+            description: formData.description,
+            status: formData.status,
+            captain_id: formData.captain_id,
+            looking_for: formData.looking_for.split(',').map(s => s.trim()).filter(Boolean)
+          }
+        }
+      });
 
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       toast({
         title: 'Успішно',
@@ -202,18 +180,22 @@ export default function TeamsManagement() {
     if (!editingTeam) return;
 
     try {
-      const { error } = await supabase
-        .from('teams')
-        .update({
-          name: formData.name,
-          description: formData.description,
-          status: formData.status,
-          captain_id: formData.captain_id,
-          looking_for: formData.looking_for.split(',').map(s => s.trim()).filter(Boolean)
-        })
-        .eq('id', editingTeam.id);
+      const { data, error } = await supabase.functions.invoke('admin-teams', {
+        body: {
+          action: 'update',
+          teamData: {
+            id: editingTeam.id,
+            name: formData.name,
+            description: formData.description,
+            status: formData.status,
+            captain_id: formData.captain_id,
+            looking_for: formData.looking_for.split(',').map(s => s.trim()).filter(Boolean)
+          }
+        }
+      });
 
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       toast({
         title: 'Успішно',
@@ -229,6 +211,35 @@ export default function TeamsManagement() {
       toast({
         title: 'Помилка',
         description: error.message || 'Не вдалося оновити дані команди',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-teams', {
+        body: {
+          action: 'delete',
+          teamData: { id: teamId }
+        }
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      toast({
+        title: 'Успішно',
+        description: 'Команду видалено'
+      });
+
+      await fetchTeams();
+      setTeamToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting team:', error);
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося видалити команду',
         variant: 'destructive'
       });
     }

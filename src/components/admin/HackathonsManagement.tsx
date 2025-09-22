@@ -89,32 +89,6 @@ export default function HackathonsManagement() {
     }
   };
 
-  const handleDeleteHackathon = async (hackathonId: string) => {
-    try {
-      const { error } = await supabase
-        .from('hackathons')
-        .delete()
-        .eq('id', hackathonId);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Успішно',
-        description: 'Хакатон видалено'
-      });
-
-      await fetchHackathons();
-      setHackathonToDelete(null);
-    } catch (error: any) {
-      console.error('Error deleting hackathon:', error);
-      toast({
-        title: 'Помилка',
-        description: error.message || 'Не вдалося видалити хакатон',
-        variant: 'destructive'
-      });
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       title: '',
@@ -130,20 +104,24 @@ export default function HackathonsManagement() {
 
   const handleCreateHackathon = async () => {
     try {
-      const { error } = await supabase
-        .from('hackathons')
-        .insert({
-          title: formData.title,
-          short_description: formData.short_description,
-          description: formData.description,
-          status: formData.status,
-          start_date: formData.start_date,
-          end_date: formData.end_date,
-          registration_deadline: formData.registration_deadline,
-          max_team_size: parseInt(formData.max_team_size)
-        });
+      const { data, error } = await supabase.functions.invoke('admin-hackathons', {
+        body: {
+          action: 'create',
+          hackathonData: {
+            title: formData.title,
+            short_description: formData.short_description,
+            description: formData.description,
+            status: formData.status,
+            start_date: formData.start_date,
+            end_date: formData.end_date,
+            registration_deadline: formData.registration_deadline,
+            max_team_size: parseInt(formData.max_team_size)
+          }
+        }
+      });
 
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       toast({
         title: 'Успішно',
@@ -182,21 +160,25 @@ export default function HackathonsManagement() {
     if (!editingHackathon) return;
 
     try {
-      const { error } = await supabase
-        .from('hackathons')
-        .update({
-          title: formData.title,
-          short_description: formData.short_description,
-          description: formData.description,
-          status: formData.status,
-          start_date: formData.start_date,
-          end_date: formData.end_date,
-          registration_deadline: formData.registration_deadline,
-          max_team_size: parseInt(formData.max_team_size)
-        })
-        .eq('id', editingHackathon.id);
+      const { data, error } = await supabase.functions.invoke('admin-hackathons', {
+        body: {
+          action: 'update',
+          hackathonData: {
+            id: editingHackathon.id,
+            title: formData.title,
+            short_description: formData.short_description,
+            description: formData.description,
+            status: formData.status,
+            start_date: formData.start_date,
+            end_date: formData.end_date,
+            registration_deadline: formData.registration_deadline,
+            max_team_size: parseInt(formData.max_team_size)
+          }
+        }
+      });
 
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       toast({
         title: 'Успішно',
@@ -212,6 +194,35 @@ export default function HackathonsManagement() {
       toast({
         title: 'Помилка',
         description: error.message || 'Не вдалося оновити дані хакатону',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteHackathon = async (hackathonId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-hackathons', {
+        body: {
+          action: 'delete',
+          hackathonData: { id: hackathonId }
+        }
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      toast({
+        title: 'Успішно',
+        description: 'Хакатон видалено'
+      });
+
+      await fetchHackathons();
+      setHackathonToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting hackathon:', error);
+      toast({
+        title: 'Помилка',
+        description: error.message || 'Не вдалося видалити хакатон',
         variant: 'destructive'
       });
     }

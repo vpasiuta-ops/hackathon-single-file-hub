@@ -3,6 +3,12 @@ project_id = "xlwoystgrwonzyhwuxxl"
 [functions.admin-auth]
 verify_jwt = false
 
+[functions.admin-teams]
+verify_jwt = false
+
+[functions.admin-hackathons]
+verify_jwt = false
+
 [functions.send-email]
 verify_jwt = false
 
