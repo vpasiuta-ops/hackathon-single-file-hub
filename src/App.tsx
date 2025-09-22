@@ -8,26 +8,35 @@ import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import NotFound from "./pages/NotFound";
+import AdminPage from "./pages/AdminPage";
+import { AdminAuthProvider } from "./hooks/useAdminAuth";
+import RegistrationPage from "./pages/RegistrationPage";
+import TeamDetailPage from "./pages/TeamDetailPage";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/admin/*" element={<Index />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/complete-profile" element={<ProfileCompletionPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/admin/*" element={
+                <AdminAuthProvider>
+                  <AdminPage />
+                </AdminAuthProvider>
+              } />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/complete-profile" element={<ProfileCompletionPage />} />
+              <Route path="/register" element={<RegistrationPage />} />
+              <Route path="/team/:teamId" element={<TeamDetailPage />} />
+              <Route path="/*" element={<Index />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
