@@ -6,6 +6,8 @@ import { Toaster } from '@/components/ui/toaster';
 
 export default function AdminLayout() {
   const { adminUser, loading, signOut } = useAdminAuth();
+  
+  console.log('AdminLayout: adminUser =', adminUser, 'loading =', loading);
 
   if (loading) {
     return (

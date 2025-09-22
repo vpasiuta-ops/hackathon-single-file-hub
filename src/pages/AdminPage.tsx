@@ -4,6 +4,7 @@ import AdminLoginPage from '@/pages/admin/AdminLoginPage';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 
 export default function AdminPage() {
+  console.log('AdminPage: Rendering admin routes');
   return (
     <Routes>
       <Route path="login" element={<AdminLoginPage />} />

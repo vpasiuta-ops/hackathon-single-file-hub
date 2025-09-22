@@ -23,12 +23,15 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('AdminAuthProvider: Initializing...');
     // Check if admin is logged in from localStorage
     const storedAdmin = localStorage.getItem('adminUser');
+    console.log('AdminAuthProvider: Stored admin:', storedAdmin);
     if (storedAdmin) {
       setAdminUser(JSON.parse(storedAdmin));
     }
     setLoading(false);
+    console.log('AdminAuthProvider: Initialization complete');
   }, []);
 
   const signIn = async (email: string, password: string): Promise<{ error?: string }> => {
