@@ -26,7 +26,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     // Check if admin is logged in from localStorage
     const storedAdmin = localStorage.getItem('adminUser');
     if (storedAdmin) {
-      setAdminUser(JSON.parse(storedAdmin));
+      try {
+        setAdminUser(JSON.parse(storedAdmin));
+      } catch (error) {
+        console.error("Failed to parse admin user from localStorage", error);
+        localStorage.removeItem('adminUser'); // Clear corrupted data
+      }
     }
     setLoading(false);
   }, []);
