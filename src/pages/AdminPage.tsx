@@ -8,8 +8,8 @@ export default function AdminPage() {
   return (
     <Routes>
       <Route path="login" element={<AdminLoginPage />} />
-      <Route element={<AdminLayout />}>
-        <Route path="/" element={<AdminDashboardPage />} />
+      <Route path="/" element={<AdminLayout />}>
+        <Route index element={<AdminDashboardPage />} />
       </Route>
     </Routes>
   );
