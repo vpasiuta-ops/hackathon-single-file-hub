@@ -14,6 +14,8 @@ import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 const Index = () => {
   const { loading } = useAuth();
   
+  console.log('Index component rendering, current path:', window.location.pathname);
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -29,15 +31,30 @@ const Index = () => {
     <AdminAuthProvider>
       <div className="min-h-screen bg-background text-foreground">
         <Routes>
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/*" element={<AdminLayout />}>
+          <Route path="/admin/login" element={
+            <>
+              {console.log('AdminLoginPage route matched')}
+              <AdminLoginPage />
+            </>
+          } />
+          <Route path="/admin/*" element={
+            <>
+              {console.log('AdminLayout route matched')}
+              <AdminLayout />
+            </>
+          }>
             <Route index element={<AdminDashboardPage />} />
             <Route path="dashboard" element={<AdminDashboardPage />} />
           </Route>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/register" element={<RegistrationPage />} />
           <Route path="/complete-profile" element={<ProfileCompletionPage />} />
-          <Route path="/*" element={<HackathonApp isAuthenticated={false} />} />
+          <Route path="/*" element={
+            <>
+              {console.log('HackathonApp fallback route matched')}
+              <HackathonApp isAuthenticated={false} />
+            </>
+          } />
         </Routes>
         <Toaster />
       </div>
