@@ -18,7 +18,7 @@ export default function AdminLayout() {
     );
   }
 
-  if (!adminUser) {
+  if (!loading && !adminUser) {
     return <Navigate to="/admin/login" replace />;
   }
 
@@ -32,7 +32,7 @@ export default function AdminLayout() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
-              Увійшов як: {adminUser.email}
+              Увійшов як: {adminUser?.email}
             </span>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" />
