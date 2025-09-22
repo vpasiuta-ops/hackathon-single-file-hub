@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-// @deno-types="npm:@types/bcrypt-ts"
-import { compare } from "npm:bcrypt-ts@5.0.2";
+import { compare } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +8,8 @@ const corsHeaders = {
 };
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('Admin-auth function called with method:', req.method);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -16,9 +17,20 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    console.log('Environment variables loaded:', { url: !!supabaseUrl, key: !!supabaseAnonKey });
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase environment variables');
+      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     const { action, email, password } = await req.json();
+    console.log('Request body parsed:', { action, email: email ? 'provided' : 'missing' });
 
     if (action === 'login') {
       console.log('Admin login attempt for:', email);
@@ -37,7 +49,10 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
 
+      console.log('Password hash from DB:', adminUser.password_hash);
+      console.log('Attempting password comparison...');
       const isPasswordValid = await compare(password, adminUser.password_hash);
+      console.log('Password comparison result:', isPasswordValid);
 
       if (!isPasswordValid) {
         console.log('Invalid password for admin:', email);
