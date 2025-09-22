@@ -26,11 +26,11 @@ const Index = () => {
     <AdminAuthProvider>
       <div className="min-h-screen bg-background text-foreground">
         <Routes>
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/*" element={<AdminPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/register" element={<RegistrationPage />} />
           <Route path="/complete-profile" element={<ProfileCompletionPage />} />
-          <Route path="/*" element={<HackathonApp isAuthenticated={false} />} />
+          <Route path="*" element={<HackathonApp isAuthenticated={false} />} />
         </Routes>
         <Toaster />
       </div>

@@ -16,7 +16,7 @@ export default function AdminLoginPage() {
 
   // Redirect if already logged in
   if (adminUser) {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
