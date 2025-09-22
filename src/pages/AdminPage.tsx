@@ -5,10 +5,13 @@ import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 
 export default function AdminPage() {
   console.log('AdminPage: Rendering admin routes');
+  const location = window.location.pathname;
+  console.log('AdminPage: Current location:', location);
+  
   return (
     <Routes>
       <Route path="login" element={<AdminLoginPage />} />
-      <Route path="" element={<AdminLayout />}>
+      <Route path="/*" element={<AdminLayout />}>
         <Route index element={<AdminDashboardPage />} />
       </Route>
     </Routes>
