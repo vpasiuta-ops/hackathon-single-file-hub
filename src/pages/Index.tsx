@@ -33,10 +33,9 @@ const Index = () => {
           <Route path="/register" element={<RegistrationPage />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/*" element={<AdminLayout />}>
-            <Route path="dashboard" element={<AdminDashboardPage />} />
             <Route index element={<AdminDashboardPage />} />
+            <Route path="dashboard" element={<AdminDashboardPage />} />
           </Route>
-          <Route path="/admin" element={<AdminPage />} />
           <Route path="/complete-profile" element={<ProfileCompletionPage />} />
           <Route path="/*" element={<HackathonApp isAuthenticated={false} />} />
         </Routes>
