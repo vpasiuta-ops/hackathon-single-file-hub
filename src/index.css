@@ -6,32 +6,32 @@
 
 @layer base {
   :root {
-    /* Темна палітра */
-    --background: 220 15% 8%;
-    --background-secondary: 220 15% 12%;
-    --background-tertiary: 220 15% 16%;
-    --foreground: 220 10% 95%;
-    --foreground-secondary: 220 8% 75%;
+    /* Нова кольорова схема AI-хакатону */
+    --background: 0 0% 11%;                    /* #1B1B1B */
+    --background-secondary: 0 0% 18%;          /* #2E2E2E */
+    --background-tertiary: 0 0% 22%;
+    --foreground: 0 0% 100%;                   /* #FFFFFF */
+    --foreground-secondary: 0 0% 56%;          /* #8F8F8F */
 
     /* Картки та поверхні */
-    --card: 220 15% 10%;
-    --card-hover: 220 15% 14%;
-    --card-foreground: 220 10% 95%;
+    --card: 0 0% 18%;                          /* #2E2E2E */
+    --card-hover: 0 0% 22%;
+    --card-foreground: 0 0% 100%;              /* #FFFFFF */
 
-    --popover: 220 15% 12%;
-    --popover-foreground: 220 10% 95%;
+    --popover: 0 0% 18%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Електричний синій акцент */
+    /* Акценти */
     --primary: 210 100% 60%;
     --primary-hover: 210 100% 65%;
-    --primary-foreground: 220 15% 8%;
+    --primary-foreground: 0 0% 11%;
 
-    --secondary: 220 15% 20%;
-    --secondary-hover: 220 15% 24%;
-    --secondary-foreground: 220 10% 90%;
+    --secondary: 0 0% 18%;                     /* #2E2E2E */
+    --secondary-hover: 0 0% 22%;
+    --secondary-foreground: 0 0% 100%;         /* #FFFFFF */
 
-    --muted: 220 15% 18%;
-    --muted-foreground: 220 8% 60%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 56%;              /* #8F8F8F */
 
     --accent: 280 100% 65%;
     --accent-hover: 280 100% 70%;
