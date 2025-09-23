@@ -41,6 +41,8 @@ export default function EmailManagement() {
   const [testEmailDialog, setTestEmailDialog] = useState<string | null>(null);
   const [massEmailDialog, setMassEmailDialog] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState('');
+  const [sendingTest, setSendingTest] = useState(false);
+  const [sendingMass, setSendingMass] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
@@ -101,6 +103,16 @@ export default function EmailManagement() {
   };
 
   const handleSendTestEmail = async (templateId: string) => {
+    if (!testEmail.trim()) {
+      toast({
+        title: 'Помилка',
+        description: 'Введіть email адресу',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setSendingTest(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: { 
@@ -112,24 +124,31 @@ export default function EmailManagement() {
 
       if (error) throw error;
 
-      toast({
-        title: 'Успішно',
-        description: 'Тестовий лист надіслано'
-      });
+      if (data?.results?.[0]?.success) {
+        toast({
+          title: 'Успішно',
+          description: `Тестовий лист надіслано на ${testEmail}`
+        });
+      } else {
+        throw new Error(data?.results?.[0]?.error || 'Невідома помилка');
+      }
 
       setTestEmailDialog(null);
       setTestEmail('');
     } catch (error: any) {
       console.error('Error sending test email:', error);
       toast({
-        title: 'Помилка',
-        description: error.message || 'Не вдалося надіслати тестовий лист',
+        title: 'Помилка відправки',
+        description: error.message || 'Не вдалося надіслати тестовий лист. Перевірте налаштування поштового сервісу.',
         variant: 'destructive'
       });
+    } finally {
+      setSendingTest(false);
     }
   };
 
   const handleMassEmail = async (templateId: string) => {
+    setSendingMass(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: { 
@@ -140,19 +159,26 @@ export default function EmailManagement() {
 
       if (error) throw error;
 
-      toast({
-        title: 'Успішно',
-        description: 'Масову розсилку розпочато'
-      });
+      if (data?.success) {
+        const { totalSent, totalFailed } = data;
+        toast({
+          title: 'Розсилку завершено',
+          description: `Успішно надіслано: ${totalSent}, помилок: ${totalFailed}`
+        });
+      } else {
+        throw new Error(data?.error || 'Невідома помилка');
+      }
 
       setMassEmailDialog(null);
     } catch (error: any) {
       console.error('Error sending mass email:', error);
       toast({
-        title: 'Помилка',
-        description: error.message || 'Не вдалося розпочати масову розсилку',
+        title: 'Помилка масової розсилки',
+        description: error.message || 'Не вдалося виконати масову розсилку. Перевірте налаштування поштового сервісу.',
         variant: 'destructive'
       });
+    } finally {
+      setSendingMass(false);
     }
   };
 
@@ -284,9 +310,10 @@ export default function EmailManagement() {
                   variant="default"
                   size="sm"
                   onClick={() => setMassEmailDialog(template.id)}
+                  disabled={sendingMass}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  Надіслати всім
+                  {sendingMass ? 'Надсилаємо...' : 'Надіслати всім'}
                 </Button>
                 <Button
                   variant="outline"
@@ -335,8 +362,11 @@ export default function EmailManagement() {
               <Button variant="outline" onClick={() => setTestEmailDialog(null)}>
                 Скасувати
               </Button>
-              <Button onClick={() => testEmailDialog && handleSendTestEmail(testEmailDialog)}>
-                Надіслати
+              <Button 
+                onClick={() => testEmailDialog && handleSendTestEmail(testEmailDialog)}
+                disabled={sendingTest}
+              >
+                {sendingTest ? 'Надсилаємо...' : 'Надіслати'}
               </Button>
             </div>
           </div>

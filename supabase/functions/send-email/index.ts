@@ -63,13 +63,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
       recipients = [recipientEmail];
     } else if (type === 'mass') {
-      // Get all user emails from auth.users table
+      // Get all user profiles to retrieve user emails
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id');
 
       if (profilesError) {
-        console.error('Error fetching user emails:', profilesError);
+        console.error('Error fetching user profiles:', profilesError);
         return new Response(
           JSON.stringify({ error: 'Не вдалося отримати список користувачів' }),
           {
@@ -79,9 +79,46 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      // For now, we'll need to get emails from auth users via service role
-      // This is a simplified version - in production you might want to batch this
-      recipients = ['admin@example.com']; // Placeholder - would need service role to get actual emails
+      if (!profiles || profiles.length === 0) {
+        console.log('No user profiles found');
+        return new Response(
+          JSON.stringify({ error: 'Користувачі не знайдені' }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          }
+        );
+      }
+
+      // Get auth user data using service role client
+      const supabaseAdmin = createClient(
+        supabaseUrl,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+
+      const userIds = profiles.map(p => p.user_id);
+      
+      // Get user emails from auth.users using service role
+      const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+      
+      if (authError) {
+        console.error('Error fetching auth users:', authError);
+        return new Response(
+          JSON.stringify({ error: 'Не вдалося отримати email користувачів' }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          }
+        );
+      }
+
+      // Filter emails for users who have profiles
+      recipients = authUsers.users
+        .filter(user => userIds.includes(user.id))
+        .map(user => user.email)
+        .filter(email => email) as string[];
+
+      console.log(`Found ${recipients.length} recipient emails for mass send`);
     }
 
     const emailResults = [];
