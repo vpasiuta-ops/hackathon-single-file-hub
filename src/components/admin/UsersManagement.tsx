@@ -213,9 +213,12 @@ export default function UsersManagement() {
   };
 
   const handleUpdateUser = async () => {
+    console.log('UsersManagement: updating user with data:', formData);
     if (!editingUser) return;
 
     try {
+      // Update profile data
+      console.log('UsersManagement: updating profile for user:', editingUser.user_id);
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -233,9 +236,10 @@ export default function UsersManagement() {
 
       if (error) throw error;
 
+      console.log('UsersManagement: user updated successfully');
       toast({
         title: 'Успішно',
-        description: 'Дані користувача оновлено'
+        description: 'Профіль користувача оновлено'
       });
 
       setIsEditModalOpen(false);
@@ -243,10 +247,10 @@ export default function UsersManagement() {
       resetForm();
       await fetchUsers();
     } catch (error: any) {
-      console.error('Error updating user:', error);
+      console.error('UsersManagement: Error updating user:', error);
       toast({
         title: 'Помилка',
-        description: error.message || 'Не вдалося оновити дані користувача',
+        description: error.message || 'Не вдалося оновити профіль користувача',
         variant: 'destructive'
       });
     }

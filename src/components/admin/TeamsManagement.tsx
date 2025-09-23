@@ -80,6 +80,7 @@ export default function TeamsManagement() {
   }, []);
 
   const fetchUsers = async () => {
+    console.log('TeamsManagement: fetching users...');
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -87,13 +88,15 @@ export default function TeamsManagement() {
         .order('first_name');
 
       if (error) throw error;
+      console.log('TeamsManagement: users fetched:', data?.length);
       setUsers(data || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('TeamsManagement: Error fetching users:', error);
     }
   };
 
   const fetchTeams = async () => {
+    console.log('TeamsManagement: fetching teams...');
     try {
       const { data, error } = await supabase
         .from('teams')
@@ -111,9 +114,10 @@ export default function TeamsManagement() {
         members_count: team.members?.[0]?.count || 0
       }));
       
+      console.log('TeamsManagement: teams fetched:', teamsWithCount.length);
       setTeams(teamsWithCount);
     } catch (error) {
-      console.error('Error fetching teams:', error);
+      console.error('TeamsManagement: Error fetching teams:', error);
       toast({
         title: 'Помилка',
         description: 'Не вдалося завантажити список команд',
@@ -136,6 +140,7 @@ export default function TeamsManagement() {
   };
 
   const handleCreateTeam = async () => {
+    console.log('TeamsManagement: creating team with data:', formData);
     try {
       const { data, error } = await supabase.functions.invoke('admin-teams', {
         body: {
@@ -151,6 +156,7 @@ export default function TeamsManagement() {
         }
       });
 
+      console.log('TeamsManagement: create team response:', data);
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
@@ -163,7 +169,7 @@ export default function TeamsManagement() {
       resetForm();
       await fetchTeams();
     } catch (error: any) {
-      console.error('Error creating team:', error);
+      console.error('TeamsManagement: Error creating team:', error);
       toast({
         title: 'Помилка',
         description: error.message || 'Не вдалося створити команду',
