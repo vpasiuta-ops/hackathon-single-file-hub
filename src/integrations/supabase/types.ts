@@ -169,12 +169,20 @@ export type Database = {
           created_at: string
           description: string
           end_date: string
+          evaluation_criteria: Json | null
           id: string
+          jury: Json | null
           max_team_size: number | null
+          partner_cases: Json | null
+          partners: Json | null
+          prize_fund: string | null
+          prizes: Json | null
           registration_deadline: string
+          rules_and_requirements: string | null
           short_description: string | null
           start_date: string
           status: string | null
+          timeline: Json | null
           title: string
           updated_at: string
         }
@@ -182,12 +190,20 @@ export type Database = {
           created_at?: string
           description: string
           end_date: string
+          evaluation_criteria?: Json | null
           id?: string
+          jury?: Json | null
           max_team_size?: number | null
+          partner_cases?: Json | null
+          partners?: Json | null
+          prize_fund?: string | null
+          prizes?: Json | null
           registration_deadline: string
+          rules_and_requirements?: string | null
           short_description?: string | null
           start_date: string
           status?: string | null
+          timeline?: Json | null
           title: string
           updated_at?: string
         }
@@ -195,12 +211,20 @@ export type Database = {
           created_at?: string
           description?: string
           end_date?: string
+          evaluation_criteria?: Json | null
           id?: string
+          jury?: Json | null
           max_team_size?: number | null
+          partner_cases?: Json | null
+          partners?: Json | null
+          prize_fund?: string | null
+          prizes?: Json | null
           registration_deadline?: string
+          rules_and_requirements?: string | null
           short_description?: string | null
           start_date?: string
           status?: string | null
+          timeline?: Json | null
           title?: string
           updated_at?: string
         }

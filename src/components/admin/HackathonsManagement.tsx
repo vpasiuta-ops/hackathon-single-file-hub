@@ -7,9 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Trash2, Edit, Plus, Calendar, AlertTriangle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Trash2, Edit, Plus, Calendar, AlertTriangle, X, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { HackathonFormDialog } from './HackathonFormDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +25,42 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+interface TimelineItem {
+  id: string;
+  name: string;
+  start_datetime: string;
+  end_datetime: string;
+  is_current: boolean;
+}
+
+interface Prize {
+  id: string;
+  place: string;
+  description: string;
+  amount: string;
+}
+
+interface PartnerCase {
+  id: string;
+  name: string;
+  description: string;
+  partner: string;
+  reward: string;
+}
+
+interface EvaluationCriterion {
+  id: string;
+  name: string;
+  weight: number;
+}
+
+interface JuryMember {
+  id: string;
+  name: string;
+  position: string;
+  photo?: string;
+}
+
 interface Hackathon {
   id: string;
   title: string;
@@ -31,18 +71,32 @@ interface Hackathon {
   end_date: string;
   registration_deadline: string;
   max_team_size: number;
+  prize_fund?: string;
+  timeline?: TimelineItem[];
+  prizes?: Prize[];
+  partner_cases?: PartnerCase[];
+  evaluation_criteria?: EvaluationCriterion[];
+  rules_and_requirements?: string;
+  partners?: string[];
+  jury?: JuryMember[];
   created_at: string;
 }
 
 interface HackathonFormData {
   title: string;
-  short_description: string;
   description: string;
   status: string;
   start_date: string;
   end_date: string;
-  registration_deadline: string;
   max_team_size: string;
+  prize_fund: string;
+  timeline: TimelineItem[];
+  prizes: Prize[];
+  partner_cases: PartnerCase[];
+  evaluation_criteria: EvaluationCriterion[];
+  rules_and_requirements: string;
+  partners: string[];
+  jury: JuryMember[];
 }
 
 export default function HackathonsManagement() {
@@ -54,13 +108,19 @@ export default function HackathonsManagement() {
   const [hackathonToDelete, setHackathonToDelete] = useState<Hackathon | null>(null);
   const [formData, setFormData] = useState<HackathonFormData>({
     title: '',
-    short_description: '',
     description: '',
-    status: 'Майбутній',
+    status: 'Чернетка',
     start_date: '',
     end_date: '',
-    registration_deadline: '',
-    max_team_size: '5'
+    max_team_size: '5',
+    prize_fund: '',
+    timeline: [],
+    prizes: [],
+    partner_cases: [],
+    evaluation_criteria: [],
+    rules_and_requirements: '',
+    partners: [],
+    jury: []
   });
   const { toast } = useToast();
 
@@ -76,7 +136,19 @@ export default function HackathonsManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setHackathons(data || []);
+      
+      // Cast the JSON fields to the proper types
+      const typedData = (data || []).map(hackathon => ({
+        ...hackathon,
+        timeline: (hackathon.timeline as any) || [],
+        prizes: (hackathon.prizes as any) || [],
+        partner_cases: (hackathon.partner_cases as any) || [],
+        evaluation_criteria: (hackathon.evaluation_criteria as any) || [],
+        partners: (hackathon.partners as any) || [],
+        jury: (hackathon.jury as any) || []
+      })) as Hackathon[];
+      
+      setHackathons(typedData);
     } catch (error) {
       console.error('Error fetching hackathons:', error);
       toast({
@@ -92,13 +164,19 @@ export default function HackathonsManagement() {
   const resetForm = () => {
     setFormData({
       title: '',
-      short_description: '',
       description: '',
-      status: 'Майбутній',
+      status: 'Чернетка',
       start_date: '',
       end_date: '',
-      registration_deadline: '',
-      max_team_size: '5'
+      max_team_size: '5',
+      prize_fund: '',
+      timeline: [],
+      prizes: [],
+      partner_cases: [],
+      evaluation_criteria: [],
+      rules_and_requirements: '',
+      partners: [],
+      jury: []
     });
   };
 
@@ -109,13 +187,19 @@ export default function HackathonsManagement() {
           action: 'create',
           hackathonData: {
             title: formData.title,
-            short_description: formData.short_description,
             description: formData.description,
             status: formData.status,
             start_date: formData.start_date,
             end_date: formData.end_date,
-            registration_deadline: formData.registration_deadline,
-            max_team_size: parseInt(formData.max_team_size)
+            max_team_size: parseInt(formData.max_team_size),
+            prize_fund: formData.prize_fund,
+            timeline: formData.timeline,
+            prizes: formData.prizes,
+            partner_cases: formData.partner_cases,
+            evaluation_criteria: formData.evaluation_criteria,
+            rules_and_requirements: formData.rules_and_requirements,
+            partners: formData.partners,
+            jury: formData.jury
           }
         }
       });
@@ -145,13 +229,19 @@ export default function HackathonsManagement() {
     setEditingHackathon(hackathon);
     setFormData({
       title: hackathon.title,
-      short_description: hackathon.short_description || '',
       description: hackathon.description,
       status: hackathon.status,
       start_date: hackathon.start_date.split('T')[0],
       end_date: hackathon.end_date.split('T')[0],
-      registration_deadline: hackathon.registration_deadline.split('T')[0],
-      max_team_size: hackathon.max_team_size.toString()
+      max_team_size: hackathon.max_team_size.toString(),
+      prize_fund: hackathon.prize_fund || '',
+      timeline: hackathon.timeline || [],
+      prizes: hackathon.prizes || [],
+      partner_cases: hackathon.partner_cases || [],
+      evaluation_criteria: hackathon.evaluation_criteria || [],
+      rules_and_requirements: hackathon.rules_and_requirements || '',
+      partners: hackathon.partners || [],
+      jury: hackathon.jury || []
     });
     setIsEditModalOpen(true);
   };
@@ -166,13 +256,19 @@ export default function HackathonsManagement() {
           hackathonData: {
             id: editingHackathon.id,
             title: formData.title,
-            short_description: formData.short_description,
             description: formData.description,
             status: formData.status,
             start_date: formData.start_date,
             end_date: formData.end_date,
-            registration_deadline: formData.registration_deadline,
-            max_team_size: parseInt(formData.max_team_size)
+            max_team_size: parseInt(formData.max_team_size),
+            prize_fund: formData.prize_fund,
+            timeline: formData.timeline,
+            prizes: formData.prizes,
+            partner_cases: formData.partner_cases,
+            evaluation_criteria: formData.evaluation_criteria,
+            rules_and_requirements: formData.rules_and_requirements,
+            partners: formData.partners,
+            jury: formData.jury
           }
         }
       });
@@ -228,14 +324,15 @@ export default function HackathonsManagement() {
     }
   };
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'Активний': return 'default';
-      case 'Майбутній': return 'secondary';
-      case 'Завершений': return 'outline';
-      default: return 'secondary';
-    }
-  };
+      const getStatusVariant = (status: string) => {
+        switch (status) {
+          case 'Активний': return 'default';
+          case 'Чернетка': return 'secondary';
+          case 'Триває зараз': return 'default';
+          case 'Завершено': return 'outline';
+          default: return 'secondary';
+        }
+      };
 
   if (loading) {
     return (
@@ -267,99 +364,16 @@ export default function HackathonsManagement() {
                 Створити хакатон
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Створити новий хакатон</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Назва хакатону *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    placeholder="Назва хакатону"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Статус</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Майбутній">Майбутній</SelectItem>
-                      <SelectItem value="Активний">Активний</SelectItem>
-                      <SelectItem value="Завершений">Завершений</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="start_date">Дата початку *</Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({...formData, start_date: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end_date">Дата завершення *</Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData({...formData, end_date: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="registration_deadline">Дедлайн реєстрації *</Label>
-                  <Input
-                    id="registration_deadline"
-                    type="date"
-                    value={formData.registration_deadline}
-                    onChange={(e) => setFormData({...formData, registration_deadline: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="max_team_size">Макс. розмір команди</Label>
-                  <Input
-                    id="max_team_size"
-                    type="number"
-                    min="1"
-                    value={formData.max_team_size}
-                    onChange={(e) => setFormData({...formData, max_team_size: e.target.value})}
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="short_description">Короткий опис</Label>
-                  <Input
-                    id="short_description"
-                    value={formData.short_description}
-                    onChange={(e) => setFormData({...formData, short_description: e.target.value})}
-                    placeholder="Короткий опис для карток"
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="description">Повний опис *</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Детальний опис хакатону..."
-                    rows={4}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
-                  Скасувати
-                </Button>
-                <Button onClick={handleCreateHackathon}>
-                  Створити хакатон
-                </Button>
-              </DialogFooter>
-            </DialogContent>
+            <HackathonFormDialog
+              title="Створити новий хакатон"
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleCreateHackathon}
+              onCancel={() => {
+                setIsCreateModalOpen(false);
+                resetForm();
+              }}
+            />
           </Dialog>
         </div>
       </CardHeader>
@@ -378,11 +392,11 @@ export default function HackathonsManagement() {
                   </Badge>
                 </div>
                 <div className="text-sm text-muted-foreground space-y-1">
-                  <p><strong>Опис:</strong> {hackathon.short_description || 'Не вказано'}</p>
+                  <p><strong>Опис:</strong> {hackathon.description.substring(0, 100)}...</p>
                   <p><strong>Початок:</strong> {new Date(hackathon.start_date).toLocaleDateString('uk-UA')}</p>
                   <p><strong>Кінець:</strong> {new Date(hackathon.end_date).toLocaleDateString('uk-UA')}</p>
-                  <p><strong>Дедлайн реєстрації:</strong> {new Date(hackathon.registration_deadline).toLocaleDateString('uk-UA')}</p>
                   <p><strong>Макс. розмір команди:</strong> {hackathon.max_team_size}</p>
+                  {hackathon.prize_fund && <p><strong>Призовий фонд:</strong> {hackathon.prize_fund}</p>}
                   <p><strong>Створено:</strong> {new Date(hackathon.created_at).toLocaleDateString('uk-UA')}</p>
                 </div>
               </div>
@@ -447,99 +461,17 @@ export default function HackathonsManagement() {
 
       {/* Edit Hackathon Dialog */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Редагувати хакатон</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit_title">Назва хакатону *</Label>
-              <Input
-                id="edit_title"
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                placeholder="Назва хакатону"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_status">Статус</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Майбутній">Майбутній</SelectItem>
-                  <SelectItem value="Активний">Активний</SelectItem>
-                  <SelectItem value="Завершений">Завершений</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_start_date">Дата початку *</Label>
-              <Input
-                id="edit_start_date"
-                type="date"
-                value={formData.start_date}
-                onChange={(e) => setFormData({...formData, start_date: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_end_date">Дата завершення *</Label>
-              <Input
-                id="edit_end_date"
-                type="date"
-                value={formData.end_date}
-                onChange={(e) => setFormData({...formData, end_date: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_registration_deadline">Дедлайн реєстрації *</Label>
-              <Input
-                id="edit_registration_deadline"
-                type="date"
-                value={formData.registration_deadline}
-                onChange={(e) => setFormData({...formData, registration_deadline: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_max_team_size">Макс. розмір команди</Label>
-              <Input
-                id="edit_max_team_size"
-                type="number"
-                min="1"
-                value={formData.max_team_size}
-                onChange={(e) => setFormData({...formData, max_team_size: e.target.value})}
-              />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="edit_short_description">Короткий опис</Label>
-              <Input
-                id="edit_short_description"
-                value={formData.short_description}
-                onChange={(e) => setFormData({...formData, short_description: e.target.value})}
-                placeholder="Короткий опис для карток"
-              />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="edit_description">Повний опис *</Label>
-              <Textarea
-                id="edit_description"
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                placeholder="Детальний опис хакатону..."
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {setIsEditModalOpen(false); setEditingHackathon(null); resetForm();}}>
-              Скасувати
-            </Button>
-            <Button onClick={handleUpdateHackathon}>
-              Зберегти зміни
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+        <HackathonFormDialog
+          title="Редагувати хакатон"
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleUpdateHackathon}
+          onCancel={() => {
+            setIsEditModalOpen(false);
+            setEditingHackathon(null);
+            resetForm();
+          }}
+        />
       </Dialog>
     </Card>
   );
