@@ -1,95 +1,71 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowRight, 
-  Users, 
-  Target,
-  Clock,
-  Shield,
-  Lightbulb,
-  Code,
-  Palette,
-  Scale,
-  CheckCircle,
-  Calendar,
-  MapPin,
-  Trophy,
-  Sparkles
-} from "lucide-react";
+import { ArrowRight, Users, Target, Clock, Shield, Lightbulb, Code, Palette, Scale, CheckCircle, Calendar, MapPin, Trophy, Sparkles } from "lucide-react";
 import PartnerModal from "@/components/PartnerModal";
 import partnersLogos from "@/assets/partners-logos.png";
 import type { UserRole } from "@/data/mockData";
-
 interface HomePageProps {
   currentRole: UserRole;
   onPageChange: (page: string) => void;
   onViewHackathon: (id: number) => void;
 }
-
-export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
-  const roadmapItems = [
-    { phase: "Початок реєстрації", date: "жовтень 2025", description: "Відкриття платформи та початок прийому заявок" },
-    { phase: "Відкриття хакатону", date: "початок листопада 2025", description: "Офіційний старт змагання" },
-    { phase: "Робота над рішеннями", date: "листопад 2025", description: "Розробка та створення AI-рішень" },
-    { phase: "Подача фінальних матеріалів", date: "кінець листопада 2025", description: "Завершення та подача проєктів" },
-    { phase: "Оцінювання журі та демо-дей", date: "кінець листопада 2025", description: "Презентація проєктів та оцінювання" },
-    { phase: "Оголошення переможців", date: "Під час демо-дею", description: "Визначення та нагородження переможців" },
-  ];
-
+export default function HomePage({
+  currentRole,
+  onPageChange
+}: HomePageProps) {
+  const roadmapItems = [{
+    phase: "Початок реєстрації",
+    date: "жовтень 2025",
+    description: "Відкриття платформи та початок прийому заявок"
+  }, {
+    phase: "Відкриття хакатону",
+    date: "початок листопада 2025",
+    description: "Офіційний старт змагання"
+  }, {
+    phase: "Робота над рішеннями",
+    date: "листопад 2025",
+    description: "Розробка та створення AI-рішень"
+  }, {
+    phase: "Подача фінальних матеріалів",
+    date: "кінець листопада 2025",
+    description: "Завершення та подача проєктів"
+  }, {
+    phase: "Оцінювання журі та демо-дей",
+    date: "кінець листопада 2025",
+    description: "Презентація проєктів та оцінювання"
+  }, {
+    phase: "Оголошення переможців",
+    date: "Під час демо-дею",
+    description: "Визначення та нагородження переможців"
+  }];
   const technicalRoles = ["Full-stack розробники", "Frontend розробники", "Backend розробники", "ML/AI інженери", "Data Scientists", "DevOps інженери", "Mobile розробники"];
   const productRoles = ["Product менеджери", "UX/UI дизайнери", "Business аналітики", "Проектні менеджери"];
   const legalRoles = ["AI етики", "Юристи з IT права", "Експерти з приватності даних"];
-
-  const requirements = [
-    "Досвід роботи з AI/ML технологіями або бажання їх вивчати",
-    "Готовність працювати в команді над державними кейсами",
-    "Відповідальне ставлення до розробки AI-рішень",
-    "Базові знання українського законодавства (для юристів)"
-  ];
-
-  const steps = [
-    "Зареєструйтесь на платформі та заповніть свій профіль",
-    "Створіть команду або приєднайтесь до існуючої",
-    "Оберіть державний кейс для розробки",
-    "Працюйте над рішенням та беріть участь у демо-дні"
-  ];
-
-  const faqItems = [
-    {
-      question: "Хто може брати участь у хакатоні?",
-      answer: "Участь можуть брати всі спеціалісти з досвідом або інтересом до AI/ML, включно з розробниками, дизайнерами, продакт-менеджерами та юристами."
-    },
-    {
-      question: "Чи потрібен досвід роботи з державними проєктами?",
-      answer: "Ні, досвід роботи з державними проєктами не є обов'язковим. Головне - ваше бажання створювати корисні рішення для України."
-    },
-    {
-      question: "Які призи чекають на переможців?",
-      answer: "Переможці отримають грошові винагороди, можливості для співпраці з державними органами та признання від IT-спільноти."
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-background">
+  const requirements = ["Досвід роботи з AI/ML технологіями або бажання їх вивчати", "Готовність працювати в команді над державними кейсами", "Відповідальне ставлення до розробки AI-рішень", "Базові знання українського законодавства (для юристів)"];
+  const steps = ["Зареєструйтесь на платформі та заповніть свій профіль", "Створіть команду або приєднайтесь до існуючої", "Оберіть державний кейс для розробки", "Працюйте над рішенням та беріть участь у демо-дні"];
+  const faqItems = [{
+    question: "Хто може брати участь у хакатоні?",
+    answer: "Участь можуть брати всі спеціалісти з досвідом або інтересом до AI/ML, включно з розробниками, дизайнерами, продакт-менеджерами та юристами."
+  }, {
+    question: "Чи потрібен досвід роботи з державними проєктами?",
+    answer: "Ні, досвід роботи з державними проєктами не є обов'язковим. Головне - ваше бажання створювати корисні рішення для України."
+  }, {
+    question: "Які призи чекають на переможців?",
+    answer: "Переможці отримають грошові винагороди, можливості для співпраці з державними органами та признання від IT-спільноти."
+  }];
+  return <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
         {/* Header with logos */}
         <div className="max-w-6xl mx-auto mb-12">
           <div className="flex justify-center items-center mb-12">
-            <img 
-              src={partnersLogos} 
-              alt="Логотипи партнерів: Мінцифри, AI CoE, EPAM" 
-              className="max-w-md w-full h-auto opacity-90 hover:opacity-100 transition-opacity"
-            />
+            
           </div>
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <Badge className="bg-secondary text-foreground border-secondary mb-6 px-4 py-2">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Офіційна платформа
-          </Badge>
+          
           
           <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground leading-tight">
             Платформа AI-Хакатонів України
@@ -99,12 +75,7 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
             Шукаємо учасників і команди, які долучаться до розробки рішень з використання штучного інтелекту для державних кейсів
           </p>
           
-          <Button 
-            variant="default" 
-            size="lg"
-            onClick={() => onPageChange('register')}
-            className="mb-8"
-          >
+          <Button variant="default" size="lg" onClick={() => onPageChange('register')} className="mb-8">
             Зареєструватися
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
@@ -174,8 +145,7 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
           </h2>
           
           <div className="space-y-6 mb-8">
-            {roadmapItems.map((item, index) => (
-              <div key={index} className="flex items-start gap-4">
+            {roadmapItems.map((item, index) => <div key={index} className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">
                   {index + 1}
                 </div>
@@ -189,8 +159,7 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
                   </div>
                   <p className="text-foreground-secondary text-sm">{item.description}</p>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -215,12 +184,10 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {technicalRoles.map((role, index) => (
-                    <li key={index} className="text-foreground-secondary text-sm flex items-center">
+                  {technicalRoles.map((role, index) => <li key={index} className="text-foreground-secondary text-sm flex items-center">
                       <CheckCircle className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
                       {role}
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </CardContent>
             </Card>
@@ -232,12 +199,10 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {productRoles.map((role, index) => (
-                    <li key={index} className="text-foreground-secondary text-sm flex items-center">
+                  {productRoles.map((role, index) => <li key={index} className="text-foreground-secondary text-sm flex items-center">
                       <CheckCircle className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
                       {role}
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </CardContent>
             </Card>
@@ -249,12 +214,10 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {legalRoles.map((role, index) => (
-                    <li key={index} className="text-foreground-secondary text-sm flex items-center">
+                  {legalRoles.map((role, index) => <li key={index} className="text-foreground-secondary text-sm flex items-center">
                       <CheckCircle className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
                       {role}
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </CardContent>
             </Card>
@@ -270,20 +233,14 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
           </h2>
           
           <div className="space-y-4 mb-8">
-            {requirements.map((requirement, index) => (
-              <div key={index} className="flex items-start gap-3">
+            {requirements.map((requirement, index) => <div key={index} className="flex items-start gap-3">
                 <Shield className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                 <p className="text-foreground-secondary">{requirement}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
           
           <div className="text-center">
-            <Button 
-              variant="default" 
-              size="lg"
-              onClick={() => onPageChange('register')}
-            >
+            <Button variant="default" size="lg" onClick={() => onPageChange('register')}>
               Зареєструватися
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -299,16 +256,14 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
           </h2>
           
           <div className="space-y-6">
-            {steps.map((step, index) => (
-              <div key={index} className="flex items-start gap-4">
+            {steps.map((step, index) => <div key={index} className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold">
                   {index + 1}
                 </div>
                 <div className="flex-grow pt-2">
                   <p className="text-foreground">{step}</p>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -351,14 +306,12 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
           </h2>
           
           <div className="space-y-6">
-            {faqItems.map((item, index) => (
-              <Card key={index} className="bg-card border-0">
+            {faqItems.map((item, index) => <Card key={index} className="bg-card border-0">
                 <CardContent className="pt-6">
                   <h3 className="font-semibold text-foreground mb-3">{item.question}</h3>
                   <p className="text-foreground-secondary">{item.answer}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -374,16 +327,11 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
             Приєднуйтесь до найбільшого AI-хакатону України та створюйте рішення, 
             які допоможуть мільйонам людей.
           </p>
-          <Button 
-            variant="default" 
-            size="xl"
-            onClick={() => onPageChange('register')}
-          >
+          <Button variant="default" size="xl" onClick={() => onPageChange('register')}>
             <MapPin className="w-5 h-5 mr-2" />
             Зареєструватися зараз
           </Button>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 }
