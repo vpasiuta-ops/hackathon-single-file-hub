@@ -107,22 +107,27 @@ export default function HackathonsManagement() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingHackathon, setEditingHackathon] = useState<Hackathon | null>(null);
   const [hackathonToDelete, setHackathonToDelete] = useState<Hackathon | null>(null);
-  const [formData, setFormData] = useState<HackathonFormData>({
-    title: '',
-    description: '',
-    status: 'Чернетка',
-    start_date: '',
-    end_date: '',
-    registration_deadline: '',
-    max_team_size: '5',
-    prize_fund: '',
-    timeline: [],
-    prizes: [],
-    partner_cases: [],
-    evaluation_criteria: [],
-    rules_and_requirements: '',
-    partners: [],
-    jury: []
+  const [formData, setFormData] = useState<HackathonFormData>(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    return {
+      title: '',
+      description: '',
+      status: 'Чернетка',
+      start_date: nextWeek,
+      end_date: nextWeek,
+      registration_deadline: today,
+      max_team_size: '5',
+      prize_fund: '',
+      timeline: [],
+      prizes: [],
+      partner_cases: [],
+      evaluation_criteria: [],
+      rules_and_requirements: '',
+      partners: [],
+      jury: []
+    };
   });
   const { toast } = useToast();
 
@@ -164,13 +169,16 @@ export default function HackathonsManagement() {
   };
 
   const resetForm = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
     setFormData({
       title: '',
       description: '',
       status: 'Чернетka',
-      start_date: '',
-      end_date: '',
-      registration_deadline: '',
+      start_date: nextWeek,
+      end_date: nextWeek,
+      registration_deadline: today,
       max_team_size: '5',
       prize_fund: '',
       timeline: [],
@@ -185,12 +193,20 @@ export default function HackathonsManagement() {
 
   const handleCreateHackathon = async () => {
     try {
+      console.log('Creating hackathon with data:', formData);
+      
+      // Validate required fields
+      if (!formData.title || !formData.description || !formData.start_date || !formData.end_date || !formData.registration_deadline) {
+        throw new Error('Будь ласка, заповніть всі обов\'язкові поля');
+      }
+      
       const { data, error } = await supabase.functions.invoke('admin-hackathons', {
         body: {
           action: 'create',
           hackathonData: {
             title: formData.title,
             description: formData.description,
+            short_description: formData.description.substring(0, 200), // Use first 200 chars as short description
             status: formData.status,
             start_date: formData.start_date,
             end_date: formData.end_date,
@@ -262,6 +278,7 @@ export default function HackathonsManagement() {
             id: editingHackathon.id,
             title: formData.title,
             description: formData.description,
+            short_description: formData.description.substring(0, 200), // Use first 200 chars as short description
             status: formData.status,
             start_date: formData.start_date,
             end_date: formData.end_date,

@@ -30,6 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { action, hackathonData } = await req.json();
     console.log('Admin hackathons action:', action);
+    console.log('Hackathon data received:', JSON.stringify(hackathonData, null, 2));
 
     switch (action) {
       case 'create':
