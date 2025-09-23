@@ -43,7 +43,15 @@ const handler = async (req: Request): Promise<Response> => {
             start_date: hackathonData.start_date,
             end_date: hackathonData.end_date,
             registration_deadline: hackathonData.registration_deadline,
-            max_team_size: hackathonData.max_team_size
+            max_team_size: hackathonData.max_team_size,
+            prize_fund: hackathonData.prize_fund,
+            timeline: hackathonData.timeline,
+            prizes: hackathonData.prizes,
+            partner_cases: hackathonData.partner_cases,
+            evaluation_criteria: hackathonData.evaluation_criteria,
+            rules_and_requirements: hackathonData.rules_and_requirements,
+            partners: hackathonData.partners,
+            jury: hackathonData.jury
           })
           .select()
           .single();
@@ -70,7 +78,15 @@ const handler = async (req: Request): Promise<Response> => {
             start_date: hackathonData.start_date,
             end_date: hackathonData.end_date,
             registration_deadline: hackathonData.registration_deadline,
-            max_team_size: hackathonData.max_team_size
+            max_team_size: hackathonData.max_team_size,
+            prize_fund: hackathonData.prize_fund,
+            timeline: hackathonData.timeline,
+            prizes: hackathonData.prizes,
+            partner_cases: hackathonData.partner_cases,
+            evaluation_criteria: hackathonData.evaluation_criteria,
+            rules_and_requirements: hackathonData.rules_and_requirements,
+            partners: hackathonData.partners,
+            jury: hackathonData.jury
           })
           .eq('id', hackathonData.id)
           .select()

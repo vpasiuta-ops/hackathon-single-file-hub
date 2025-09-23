@@ -53,6 +53,7 @@ interface HackathonFormData {
   status: string;
   start_date: string;
   end_date: string;
+  registration_deadline: string;
   max_team_size: string;
   prize_fund: string;
   timeline: TimelineItem[];
@@ -302,6 +303,15 @@ export function HackathonFormDialog({
                     type="date"
                     value={formData.end_date}
                     onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="registration_deadline">Дедлайн реєстрації *</Label>
+                  <Input
+                    id="registration_deadline"
+                    type="date"
+                    value={formData.registration_deadline}
+                    onChange={(e) => setFormData({ ...formData, registration_deadline: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">

@@ -88,6 +88,7 @@ interface HackathonFormData {
   status: string;
   start_date: string;
   end_date: string;
+  registration_deadline: string;
   max_team_size: string;
   prize_fund: string;
   timeline: TimelineItem[];
@@ -112,6 +113,7 @@ export default function HackathonsManagement() {
     status: 'Чернетка',
     start_date: '',
     end_date: '',
+    registration_deadline: '',
     max_team_size: '5',
     prize_fund: '',
     timeline: [],
@@ -165,9 +167,10 @@ export default function HackathonsManagement() {
     setFormData({
       title: '',
       description: '',
-      status: 'Чернетка',
+      status: 'Чернетka',
       start_date: '',
       end_date: '',
+      registration_deadline: '',
       max_team_size: '5',
       prize_fund: '',
       timeline: [],
@@ -191,6 +194,7 @@ export default function HackathonsManagement() {
             status: formData.status,
             start_date: formData.start_date,
             end_date: formData.end_date,
+            registration_deadline: formData.registration_deadline,
             max_team_size: parseInt(formData.max_team_size),
             prize_fund: formData.prize_fund,
             timeline: formData.timeline,
@@ -233,6 +237,7 @@ export default function HackathonsManagement() {
       status: hackathon.status,
       start_date: hackathon.start_date.split('T')[0],
       end_date: hackathon.end_date.split('T')[0],
+      registration_deadline: hackathon.registration_deadline.split('T')[0],
       max_team_size: hackathon.max_team_size.toString(),
       prize_fund: hackathon.prize_fund || '',
       timeline: hackathon.timeline || [],
@@ -260,6 +265,7 @@ export default function HackathonsManagement() {
             status: formData.status,
             start_date: formData.start_date,
             end_date: formData.end_date,
+            registration_deadline: formData.registration_deadline,
             max_team_size: parseInt(formData.max_team_size),
             prize_fund: formData.prize_fund,
             timeline: formData.timeline,
