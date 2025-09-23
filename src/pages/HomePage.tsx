@@ -18,6 +18,7 @@ import {
   Sparkles
 } from "lucide-react";
 import PartnerModal from "@/components/PartnerModal";
+import partnersLogos from "@/assets/partners-logos.png";
 import type { UserRole } from "@/data/mockData";
 
 interface HomePageProps {
@@ -75,10 +76,12 @@ export default function HomePage({ currentRole, onPageChange }: HomePageProps) {
       <section className="relative py-20 px-4 overflow-hidden">
         {/* Header with logos */}
         <div className="max-w-6xl mx-auto mb-12">
-          <div className="flex justify-center items-center gap-8 mb-12">
-            <div className="text-foreground-secondary text-sm font-medium">Мінцифри</div>
-            <div className="text-foreground-secondary text-sm font-medium">AI CoE</div>
-            <div className="text-foreground-secondary text-sm font-medium">EPAM</div>
+          <div className="flex justify-center items-center mb-12">
+            <img 
+              src={partnersLogos} 
+              alt="Логотипи партнерів: Мінцифри, AI CoE, EPAM" 
+              className="max-w-md w-full h-auto opacity-90 hover:opacity-100 transition-opacity"
+            />
           </div>
         </div>
 
