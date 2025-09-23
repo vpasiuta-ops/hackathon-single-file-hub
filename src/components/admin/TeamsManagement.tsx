@@ -8,9 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Edit, UserPlus, Users, Plus, AlertTriangle } from 'lucide-react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Trash2, Edit, UserPlus, Users, Plus, AlertTriangle, Check, ChevronsUpDown, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +46,7 @@ interface TeamFormData {
   status: string;
   captain_id: string;
   looking_for: string;
+  members: string[];
 }
 
 interface User {
@@ -59,12 +63,14 @@ export default function TeamsManagement() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+  const [openCombobox, setOpenCombobox] = useState(false);
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
     description: '',
     status: 'формується',
     captain_id: '',
-    looking_for: ''
+    looking_for: '',
+    members: []
   });
   const { toast } = useToast();
 
@@ -124,7 +130,8 @@ export default function TeamsManagement() {
       description: '',
       status: 'формується',
       captain_id: '',
-      looking_for: ''
+      looking_for: '',
+      members: []
     });
   };
 
@@ -138,7 +145,8 @@ export default function TeamsManagement() {
             description: formData.description,
             status: formData.status,
             captain_id: formData.captain_id,
-            looking_for: formData.looking_for.split(',').map(s => s.trim()).filter(Boolean)
+            looking_for: formData.looking_for.split(',').map(s => s.trim()).filter(Boolean),
+            members: formData.members
           }
         }
       });
@@ -164,14 +172,21 @@ export default function TeamsManagement() {
     }
   };
 
-  const handleEditTeam = (team: Team) => {
+  const handleEditTeam = async (team: Team) => {
+    // Fetch current team members
+    const { data: members } = await supabase
+      .from('team_members')
+      .select('user_id')
+      .eq('team_id', team.id);
+
     setEditingTeam(team);
     setFormData({
       name: team.name,
       description: team.description,
       status: team.status,
       captain_id: team.captain_id,
-      looking_for: team.looking_for?.join(', ') || ''
+      looking_for: team.looking_for?.join(', ') || '',
+      members: members?.map(m => m.user_id) || []
     });
     setIsEditModalOpen(true);
   };
@@ -189,7 +204,8 @@ export default function TeamsManagement() {
             description: formData.description,
             status: formData.status,
             captain_id: formData.captain_id,
-            looking_for: formData.looking_for.split(',').map(s => s.trim()).filter(Boolean)
+            looking_for: formData.looking_for.split(',').map(s => s.trim()).filter(Boolean),
+            members: formData.members
           }
         }
       });
@@ -328,6 +344,77 @@ export default function TeamsManagement() {
                     onChange={(e) => setFormData({...formData, looking_for: e.target.value})}
                     placeholder="Frontend Developer, Designer"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Учасники команди</Label>
+                  <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openCombobox}
+                        className="w-full justify-between"
+                      >
+                        {formData.members.length > 0
+                          ? `Обрано ${formData.members.length} учасників`
+                          : "Оберіть учасників..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Пошук учасників..." />
+                        <CommandEmpty>Учасників не знайдено.</CommandEmpty>
+                        <CommandGroup className="max-h-60 overflow-auto">
+                          {users.map((user) => (
+                            <CommandItem
+                              key={user.user_id}
+                              onSelect={() => {
+                                const isSelected = formData.members.includes(user.user_id);
+                                setFormData({
+                                  ...formData,
+                                  members: isSelected
+                                    ? formData.members.filter(id => id !== user.user_id)
+                                    : [...formData.members, user.user_id]
+                                });
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.members.includes(user.user_id) ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {user.first_name && user.last_name 
+                                ? `${user.first_name} ${user.last_name}`
+                                : `ID: ${user.user_id}`}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {formData.members.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.members.map((memberId) => {
+                        const user = users.find(u => u.user_id === memberId);
+                        return (
+                          <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
+                            {user?.first_name && user?.last_name 
+                              ? `${user.first_name} ${user.last_name}`
+                              : `ID: ${memberId}`}
+                            <X 
+                              className="h-3 w-3 cursor-pointer" 
+                              onClick={() => setFormData({
+                                ...formData,
+                                members: formData.members.filter(id => id !== memberId)
+                              })}
+                            />
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Опис команди *</Label>
@@ -488,15 +575,86 @@ export default function TeamsManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_looking_for">Шукають (через кому)</Label>
-              <Input
-                id="edit_looking_for"
-                value={formData.looking_for}
-                onChange={(e) => setFormData({...formData, looking_for: e.target.value})}
-                placeholder="Frontend Developer, Designer"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_looking_for">Шукають (через кому)</Label>
+                  <Input
+                    id="edit_looking_for"
+                    value={formData.looking_for}
+                    onChange={(e) => setFormData({...formData, looking_for: e.target.value})}
+                    placeholder="Frontend Developer, Designer"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Учасники команди</Label>
+                  <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openCombobox}
+                        className="w-full justify-between"
+                      >
+                        {formData.members.length > 0
+                          ? `Обрано ${formData.members.length} учасників`
+                          : "Оберіть учасників..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Пошук учасників..." />
+                        <CommandEmpty>Учасників не знайдено.</CommandEmpty>
+                        <CommandGroup className="max-h-60 overflow-auto">
+                          {users.map((user) => (
+                            <CommandItem
+                              key={user.user_id}
+                              onSelect={() => {
+                                const isSelected = formData.members.includes(user.user_id);
+                                setFormData({
+                                  ...formData,
+                                  members: isSelected
+                                    ? formData.members.filter(id => id !== user.user_id)
+                                    : [...formData.members, user.user_id]
+                                });
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.members.includes(user.user_id) ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {user.first_name && user.last_name 
+                                ? `${user.first_name} ${user.last_name}`
+                                : `ID: ${user.user_id}`}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {formData.members.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.members.map((memberId) => {
+                        const user = users.find(u => u.user_id === memberId);
+                        return (
+                          <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
+                            {user?.first_name && user?.last_name 
+                              ? `${user.first_name} ${user.last_name}`
+                              : `ID: ${memberId}`}
+                            <X 
+                              className="h-3 w-3 cursor-pointer" 
+                              onClick={() => setFormData({
+                                ...formData,
+                                members: formData.members.filter(id => id !== memberId)
+                              })}
+                            />
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
             <div className="space-y-2">
               <Label htmlFor="edit_description">Опис команди *</Label>
               <Textarea

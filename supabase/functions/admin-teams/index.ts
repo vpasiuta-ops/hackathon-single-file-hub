@@ -33,7 +33,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     switch (action) {
       case 'create':
-        const { data: newTeam, error: createError } = await supabase
+        // Create team
+        const { data: newTeam, error: teamError } = await supabase
           .from('teams')
           .insert({
             name: teamData.name,
@@ -45,9 +46,29 @@ const handler = async (req: Request): Promise<Response> => {
           .select()
           .single();
 
-        if (createError) {
-          console.error('Create team error:', createError);
-          throw createError;
+        if (teamError) {
+          console.error('Error creating team:', teamError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create team: ' + teamError.message }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          );
+        }
+
+        // Add team members if provided
+        if (teamData.members && teamData.members.length > 0) {
+          const { error: membersError } = await supabase
+            .from('team_members')
+            .insert(
+              teamData.members.map((userId: string) => ({
+                team_id: newTeam.id,
+                user_id: userId
+              }))
+            );
+
+          if (membersError) {
+            console.error('Error adding team members:', membersError);
+            // Don't fail the team creation, just log the error
+          }
         }
 
         console.log('Team created successfully:', newTeam);
@@ -57,6 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
       case 'update':
+        // Update team
         const { data: updatedTeam, error: updateError } = await supabase
           .from('teams')
           .update({
@@ -71,8 +93,43 @@ const handler = async (req: Request): Promise<Response> => {
           .single();
 
         if (updateError) {
-          console.error('Update team error:', updateError);
-          throw updateError;
+          console.error('Error updating team:', updateError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to update team: ' + updateError.message }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          );
+        }
+
+        // Update team members
+        if (teamData.members !== undefined) {
+          // First, remove all existing members (except captain)
+          const { error: removeError } = await supabase
+            .from('team_members')
+            .delete()
+            .eq('team_id', teamData.id)
+            .neq('user_id', teamData.captain_id);
+
+          if (removeError) {
+            console.error('Error removing team members:', removeError);
+          }
+
+          // Then add new members
+          if (teamData.members.length > 0) {
+            const { error: addError } = await supabase
+              .from('team_members')
+              .insert(
+                teamData.members
+                  .filter((userId: string) => userId !== teamData.captain_id) // Don't duplicate captain
+                  .map((userId: string) => ({
+                    team_id: teamData.id,
+                    user_id: userId
+                  }))
+              );
+
+            if (addError) {
+              console.error('Error adding team members:', addError);
+            }
+          }
         }
 
         console.log('Team updated successfully:', updatedTeam);
