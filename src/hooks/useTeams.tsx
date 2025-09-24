@@ -371,6 +371,13 @@ export function useTeams() {
       return false;
     }
 
+    // Delete any existing applications for this user-team combination
+    await supabase
+      .from('team_applications')
+      .delete()
+      .eq('team_id', userTeam.id)
+      .eq('user_id', user.id);
+
     // Update user's participation status
     await supabase
       .from('profiles')
@@ -413,6 +420,13 @@ export function useTeams() {
       return false;
     }
 
+    // Delete any existing applications for this member-team combination
+    await supabase
+      .from('team_applications')
+      .delete()
+      .eq('team_id', userTeam.id)
+      .eq('user_id', memberId);
+
     // Update member's participation status
     await supabase
       .from('profiles')
@@ -443,6 +457,12 @@ export function useTeams() {
 
     // If no other members, delete the team
     if (members.length === 0) {
+      // Delete all applications to this team first
+      await supabase
+        .from('team_applications')
+        .delete()
+        .eq('team_id', userTeam.id);
+
       const { error } = await supabase
         .from('teams')
         .delete()
@@ -492,6 +512,13 @@ export function useTeams() {
         .delete()
         .eq('team_id', userTeam.id)
         .eq('user_id', newCaptain.user_id);
+
+      // Delete any existing applications for the old captain
+      await supabase
+        .from('team_applications')
+        .delete()
+        .eq('team_id', userTeam.id)
+        .eq('user_id', user.id);
 
       // Update old captain's participation status
       await supabase
