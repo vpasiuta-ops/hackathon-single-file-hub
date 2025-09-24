@@ -173,51 +173,20 @@ export default function UsersManagement() {
 
   const handleCreateUser = async () => {
     try {
-      // Create user in auth with email confirmation disabled
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        password: formData.password,
-        email_confirm: true, // Skip email confirmation
-        user_metadata: {
-          first_name: formData.first_name,
-          last_name: formData.last_name
+      // Call the admin-users edge function
+      const { data, error } = await supabase.functions.invoke('admin-users', {
+        body: {
+          action: 'createUser',
+          userData: formData
         }
       });
 
-      if (authError) throw authError;
-
-      // Create complete profile
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone: formData.phone || null,
-            bio: formData.bio || null,
-            skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : null,
-            technologies: formData.technologies ? formData.technologies.split(',').map(s => s.trim()).filter(Boolean) : null,
-            roles: formData.roles ? formData.roles.split(',').map(s => s.trim()).filter(Boolean) : null,
-            experience_level: formData.experience_level,
-            participation_status: formData.participation_status,
-            portfolio_url: formData.portfolio_url || null,
-            location: formData.location || null,
-            ready_to_lead: formData.ready_to_lead,
-            interested_categories: formData.interested_categories ? formData.interested_categories.split(',').map(s => s.trim()).filter(Boolean) : null,
-            existing_team_name: formData.participation_status === 'has_team' ? formData.existing_team_name : null,
-            looking_for_roles: formData.participation_status === 'has_team' && formData.looking_for_roles 
-              ? formData.looking_for_roles.split(',').map(s => s.trim()).filter(Boolean) : null,
-            team_description: formData.participation_status === 'has_team' ? formData.team_description : null,
-            is_profile_complete: true
-          })
-          .eq('user_id', authData.user.id);
-
-        if (profileError) throw profileError;
-      }
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       toast({
         title: 'Успішно',
-        description: `Користувача ${formData.first_name} ${formData.last_name} успішно створено`
+        description: data.message || `Користувача ${formData.first_name} ${formData.last_name} успішно створено`
       });
 
       setIsCreateModalOpen(false);
