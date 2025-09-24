@@ -12,18 +12,32 @@ import {
   ExternalLink,
   MapPin,
   Briefcase,
-  Target
+  Target,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeams } from '@/hooks/useTeams';
 import CreateTeamDialog from '@/components/CreateTeamDialog';
 import TeamManagementSection from '@/components/TeamManagementSection';
 import { useNavigate } from 'react-router-dom';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import { useState } from 'react';
 
 export default function ProfilePage() {
   const { user, profile } = useAuth();
-  const { userTeam, isUserTeamCaptain, loading: teamsLoading } = useTeams();
+  const { userTeam, isUserTeamCaptain, loading: teamsLoading, leaveTeam } = useTeams();
   const navigate = useNavigate();
+  const [isLeavingTeam, setIsLeavingTeam] = useState(false);
 
   const getUserInitials = () => {
     const firstName = profile?.first_name || '';
@@ -50,6 +64,12 @@ export default function ProfilePage() {
       'have_team': 'У мене вже є команда'
     };
     return statuses[profile?.participation_status as keyof typeof statuses] || profile?.participation_status;
+  };
+
+  const handleLeaveTeam = async () => {
+    setIsLeavingTeam(true);
+    await leaveTeam();
+    setIsLeavingTeam(false);
   };
 
   if (!user || !profile) {
@@ -318,6 +338,45 @@ export default function ProfilePage() {
                   {isUserTeamCaptain && userTeam && (
                     <TeamManagementSection team={userTeam} isUserTeamCaptain={isUserTeamCaptain} />
                   )}
+
+                  {/* Leave team button for regular members and captains */}
+                  <div className="pt-3 border-t">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                          disabled={isLeavingTeam}
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          {isLeavingTeam ? 'Виходжу...' : 'Вийти з команди'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Вийти з команди?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {isUserTeamCaptain 
+                              ? userTeam.members && userTeam.members.length > 0
+                                ? `Ви впевнені, що хочете вийти з команди "${userTeam.name}"? Капітанство буде передано ${userTeam.members[0]?.first_name} ${userTeam.members[0]?.last_name}.`
+                                : `Ви впевнені, що хочете вийти з команди "${userTeam.name}"? Команда буде розформована, оскільки ви єдиний учасник.`
+                              : `Ви впевнені, що хочете вийти з команди "${userTeam.name}"?`
+                            }
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleLeaveTeam}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Так, вийти
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </div>
             ) : (

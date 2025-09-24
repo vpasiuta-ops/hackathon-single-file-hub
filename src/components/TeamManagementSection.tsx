@@ -7,6 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
 import { Settings, Edit3, Plus, X, Check, UserPlus, UserMinus } from 'lucide-react';
 import { useTeams, type Team } from '@/hooks/useTeams';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +46,8 @@ export default function TeamManagementSection({ team, isUserTeamCaptain }: TeamM
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [applications, setApplications] = useState<TeamApplication[]>([]);
   const [loading, setLoading] = useState(false);
-  const { updateTeam, getTeamApplications, respondToApplication } = useTeams();
+  const [removingMember, setRemovingMember] = useState<string | null>(null);
+  const { updateTeam, getTeamApplications, respondToApplication, removeMember } = useTeams();
   const { toast } = useToast();
 
   const [editData, setEditData] = useState({
@@ -113,6 +125,17 @@ export default function TeamManagementSection({ team, isUserTeamCaptain }: TeamM
         description: 'Не вдалося обробити заявку',
         variant: 'destructive'
       });
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string, memberName: string) => {
+    setRemovingMember(memberId);
+    try {
+      await removeMember(memberId, memberName);
+    } catch (error) {
+      // Error is handled in the hook
+    } finally {
+      setRemovingMember(null);
     }
   };
 
@@ -200,6 +223,65 @@ export default function TeamManagementSection({ team, isUserTeamCaptain }: TeamM
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Team members management */}
+          {team.members && team.members.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Керування учасниками</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {team.members.map((member) => (
+                    <div key={member.user_id} className="flex items-center justify-between p-2 border rounded">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback className="text-xs">
+                            {member.first_name?.[0]}{member.last_name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">
+                          {member.first_name} {member.last_name}
+                        </span>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                            disabled={removingMember === member.user_id}
+                          >
+                            <UserMinus className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Виключити учасника?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Ви впевнені, що хочете виключити {member.first_name} {member.last_name} з команди?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel disabled={removingMember === member.user_id}>
+                              Скасувати
+                            </AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleRemoveMember(member.user_id, `${member.first_name} ${member.last_name}`)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={removingMember === member.user_id}
+                            >
+                              {removingMember === member.user_id ? 'Виключаю...' : 'Так, виключити'}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="applications" className="space-y-4">

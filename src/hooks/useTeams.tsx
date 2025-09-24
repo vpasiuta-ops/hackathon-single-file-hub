@@ -340,6 +340,176 @@ export function useTeams() {
     return applicationsWithProfiles;
   };
 
+  const leaveTeam = async () => {
+    if (!user || !userTeam) {
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося знайти користувача або команду',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    // If user is captain, use different logic
+    if (isUserTeamCaptain) {
+      return await leaveTeamAsCaptain();
+    }
+
+    // Remove user from team_members
+    const { error } = await supabase
+      .from('team_members')
+      .delete()
+      .eq('team_id', userTeam.id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося вийти з команди',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    // Update user's participation status
+    await supabase
+      .from('profiles')
+      .update({ participation_status: 'looking_for_team' })
+      .eq('user_id', user.id);
+
+    toast({
+      title: 'Успішно!',
+      description: 'Ви вийшли з команди'
+    });
+
+    fetchTeams();
+    fetchUserTeam();
+    return true;
+  };
+
+  const removeMember = async (memberId: string, memberName: string) => {
+    if (!user || !userTeam || !isUserTeamCaptain) {
+      toast({
+        title: 'Помилка',
+        description: 'У вас немає прав для виключення учасників',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    // Remove member from team_members
+    const { error } = await supabase
+      .from('team_members')
+      .delete()
+      .eq('team_id', userTeam.id)
+      .eq('user_id', memberId);
+
+    if (error) {
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося виключити учасника',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    // Update member's participation status
+    await supabase
+      .from('profiles')
+      .update({ participation_status: 'looking_for_team' })
+      .eq('user_id', memberId);
+
+    toast({
+      title: 'Успішно!',
+      description: `${memberName} виключено з команди`
+    });
+
+    fetchTeams();
+    fetchUserTeam();
+    return true;
+  };
+
+  const leaveTeamAsCaptain = async () => {
+    if (!user || !userTeam || !isUserTeamCaptain) {
+      toast({
+        title: 'Помилка',
+        description: 'Помилка при виході з команди',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    const members = userTeam.members || [];
+
+    // If no other members, delete the team
+    if (members.length === 0) {
+      const { error } = await supabase
+        .from('teams')
+        .delete()
+        .eq('id', userTeam.id);
+
+      if (error) {
+        toast({
+          title: 'Помилка',
+          description: 'Не вдалося розформувати команду',
+          variant: 'destructive'
+        });
+        return false;
+      }
+
+      // Update captain's participation status
+      await supabase
+        .from('profiles')
+        .update({ participation_status: 'looking_for_team' })
+        .eq('user_id', user.id);
+
+      toast({
+        title: 'Успішно!',
+        description: 'Команду розформовано'
+      });
+    } else {
+      // Assign new captain (first member in the list)
+      const newCaptain = members[0];
+      
+      // Update team captain
+      const { error: updateError } = await supabase
+        .from('teams')
+        .update({ captain_id: newCaptain.user_id })
+        .eq('id', userTeam.id);
+
+      if (updateError) {
+        toast({
+          title: 'Помилка',
+          description: 'Не вдалося передати капітанство',
+          variant: 'destructive'
+        });
+        return false;
+      }
+
+      // Remove new captain from team_members (since they're now captain)
+      await supabase
+        .from('team_members')
+        .delete()
+        .eq('team_id', userTeam.id)
+        .eq('user_id', newCaptain.user_id);
+
+      // Update old captain's participation status
+      await supabase
+        .from('profiles')
+        .update({ participation_status: 'looking_for_team' })
+        .eq('user_id', user.id);
+
+      toast({
+        title: 'Успішно!',
+        description: `Ви вийшли з команди. Новий капітан: ${newCaptain.first_name} ${newCaptain.last_name}`
+      });
+    }
+
+    fetchTeams();
+    fetchUserTeam();
+    return true;
+  };
+
   return {
     teams,
     userTeam,
@@ -352,6 +522,8 @@ export function useTeams() {
     respondToApplication,
     getUserApplications,
     getTeamApplications,
+    leaveTeam,
+    removeMember,
     refetch: () => Promise.all([fetchTeams(), fetchUserTeam()])
   };
 }
