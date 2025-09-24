@@ -234,6 +234,8 @@ export type Database = {
         Row: {
           bio: string | null
           created_at: string
+          discord: string | null
+          email: string | null
           existing_team_name: string | null
           experience_level: string | null
           first_name: string | null
@@ -251,12 +253,15 @@ export type Database = {
           skills: string[] | null
           team_description: string | null
           technologies: string[] | null
+          telegram: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           bio?: string | null
           created_at?: string
+          discord?: string | null
+          email?: string | null
           existing_team_name?: string | null
           experience_level?: string | null
           first_name?: string | null
@@ -274,12 +279,15 @@ export type Database = {
           skills?: string[] | null
           team_description?: string | null
           technologies?: string[] | null
+          telegram?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           bio?: string | null
           created_at?: string
+          discord?: string | null
+          email?: string | null
           existing_team_name?: string | null
           experience_level?: string | null
           first_name?: string | null
@@ -297,6 +305,7 @@ export type Database = {
           skills?: string[] | null
           team_description?: string | null
           technologies?: string[] | null
+          telegram?: string | null
           updated_at?: string
           user_id?: string
         }
