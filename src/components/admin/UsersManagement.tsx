@@ -43,11 +43,21 @@ interface UserFormData {
   first_name: string;
   last_name: string;
   phone: string;
-  bio: string;
-  skills: string;
-  roles: string;
-  experience_level: string;
+  telegram: string;
+  discord: string;
   participation_status: string;
+  roles: string;
+  skills: string;
+  technologies: string;
+  experience_level: string;
+  portfolio_url: string;
+  bio: string;
+  location: string;
+  ready_to_lead: boolean;
+  interested_categories: string;
+  existing_team_name: string;
+  looking_for_roles: string;
+  team_description: string;
 }
 
 export default function UsersManagement() {
@@ -64,11 +74,21 @@ export default function UsersManagement() {
     first_name: '',
     last_name: '',
     phone: '',
-    bio: '',
-    skills: '',
+    telegram: '',
+    discord: '',
+    participation_status: 'looking_for_team',
     roles: '',
-    experience_level: '',
-    participation_status: 'looking_for_team'
+    skills: '',
+    technologies: '',
+    experience_level: 'intermediate',
+    portfolio_url: '',
+    bio: '',
+    location: '',
+    ready_to_lead: false,
+    interested_categories: '',
+    existing_team_name: '',
+    looking_for_roles: '',
+    team_description: ''
   });
   const { toast } = useToast();
 
@@ -133,43 +153,61 @@ export default function UsersManagement() {
       first_name: '',
       last_name: '',
       phone: '',
-      bio: '',
-      skills: '',
+      telegram: '',
+      discord: '',
+      participation_status: 'looking_for_team',
       roles: '',
-      experience_level: '',
-      participation_status: 'looking_for_team'
+      skills: '',
+      technologies: '',
+      experience_level: 'intermediate',
+      portfolio_url: '',
+      bio: '',
+      location: '',
+      ready_to_lead: false,
+      interested_categories: '',
+      existing_team_name: '',
+      looking_for_roles: '',
+      team_description: ''
     });
   };
 
   const handleCreateUser = async () => {
     try {
-      // Create user in auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Create user in auth with email confirmation disabled
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            first_name: formData.first_name,
-            last_name: formData.last_name
-          }
+        email_confirm: true, // Skip email confirmation
+        user_metadata: {
+          first_name: formData.first_name,
+          last_name: formData.last_name
         }
       });
 
       if (authError) throw authError;
 
-      // Update profile with additional data
+      // Create complete profile
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
             first_name: formData.first_name,
             last_name: formData.last_name,
-            phone: formData.phone,
-            bio: formData.bio,
-            skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
-            roles: formData.roles.split(',').map(s => s.trim()).filter(Boolean),
+            phone: formData.phone || null,
+            bio: formData.bio || null,
+            skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : null,
+            technologies: formData.technologies ? formData.technologies.split(',').map(s => s.trim()).filter(Boolean) : null,
+            roles: formData.roles ? formData.roles.split(',').map(s => s.trim()).filter(Boolean) : null,
             experience_level: formData.experience_level,
             participation_status: formData.participation_status,
+            portfolio_url: formData.portfolio_url || null,
+            location: formData.location || null,
+            ready_to_lead: formData.ready_to_lead,
+            interested_categories: formData.interested_categories ? formData.interested_categories.split(',').map(s => s.trim()).filter(Boolean) : null,
+            existing_team_name: formData.participation_status === 'has_team' ? formData.existing_team_name : null,
+            looking_for_roles: formData.participation_status === 'has_team' && formData.looking_for_roles 
+              ? formData.looking_for_roles.split(',').map(s => s.trim()).filter(Boolean) : null,
+            team_description: formData.participation_status === 'has_team' ? formData.team_description : null,
             is_profile_complete: true
           })
           .eq('user_id', authData.user.id);
@@ -179,7 +217,7 @@ export default function UsersManagement() {
 
       toast({
         title: 'Успішно',
-        description: 'Користувача створено'
+        description: `Користувача ${formData.first_name} ${formData.last_name} успішно створено`
       });
 
       setIsCreateModalOpen(false);
@@ -203,11 +241,21 @@ export default function UsersManagement() {
       first_name: user.first_name || '',
       last_name: user.last_name || '',
       phone: user.phone || '',
-      bio: user.bio || '',
-      skills: user.skills?.join(', ') || '',
+      telegram: user.telegram || '',
+      discord: user.discord || '',
+      participation_status: user.participation_status || 'looking_for_team',
       roles: user.roles?.join(', ') || '',
-      experience_level: user.experience_level || '',
-      participation_status: user.participation_status || 'looking_for_team'
+      skills: user.skills?.join(', ') || '',
+      technologies: user.technologies?.join(', ') || '',
+      experience_level: user.experience_level || 'intermediate',
+      portfolio_url: user.portfolio_url || '',
+      bio: user.bio || '',
+      location: user.location || '',
+      ready_to_lead: user.ready_to_lead || false,
+      interested_categories: user.interested_categories?.join(', ') || '',
+      existing_team_name: user.existing_team_name || '',
+      looking_for_roles: user.looking_for_roles?.join(', ') || '',
+      team_description: user.team_description || ''
     });
     setIsEditModalOpen(true);
   };
@@ -224,12 +272,21 @@ export default function UsersManagement() {
         .update({
           first_name: formData.first_name,
           last_name: formData.last_name,
-          phone: formData.phone,
-          bio: formData.bio,
-          skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
-          roles: formData.roles.split(',').map(s => s.trim()).filter(Boolean),
+          phone: formData.phone || null,
+          bio: formData.bio || null,
+          skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : null,
+          technologies: formData.technologies ? formData.technologies.split(',').map(s => s.trim()).filter(Boolean) : null,
+          roles: formData.roles ? formData.roles.split(',').map(s => s.trim()).filter(Boolean) : null,
           experience_level: formData.experience_level,
           participation_status: formData.participation_status,
+          portfolio_url: formData.portfolio_url || null,
+          location: formData.location || null,
+          ready_to_lead: formData.ready_to_lead,
+          interested_categories: formData.interested_categories ? formData.interested_categories.split(',').map(s => s.trim()).filter(Boolean) : null,
+          existing_team_name: formData.participation_status === 'has_team' ? formData.existing_team_name : null,
+          looking_for_roles: formData.participation_status === 'has_team' && formData.looking_for_roles 
+            ? formData.looking_for_roles.split(',').map(s => s.trim()).filter(Boolean) : null,
+          team_description: formData.participation_status === 'has_team' ? formData.team_description : null,
           is_profile_complete: true
         })
         .eq('user_id', editingUser.user_id);
@@ -286,112 +343,238 @@ export default function UsersManagement() {
                 Створити користувача
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Створити нового користувача</DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    placeholder="email@example.com"
-                  />
+              <div className="space-y-6 py-4">
+                {/* Обов'язкові поля */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Обов'язкові поля</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        placeholder="email@example.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Пароль *</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                        placeholder="Мінімум 6 символів"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="first_name">Ім'я *</Label>
+                      <Input
+                        id="first_name"
+                        value={formData.first_name}
+                        onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                        placeholder="Ім'я"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="last_name">Прізвище *</Label>
+                      <Input
+                        id="last_name"
+                        value={formData.last_name}
+                        onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                        placeholder="Прізвище"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Телефон</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        placeholder="+380..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="telegram">Telegram</Label>
+                      <Input
+                        id="telegram"
+                        value={formData.telegram}
+                        onChange={(e) => setFormData({...formData, telegram: e.target.value})}
+                        placeholder="@username"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="discord">Discord</Label>
+                      <Input
+                        id="discord"
+                        value={formData.discord}
+                        onChange={(e) => setFormData({...formData, discord: e.target.value})}
+                        placeholder="username#1234"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="participation_status">Статус участі *</Label>
+                      <Select value={formData.participation_status} onValueChange={(value) => setFormData({...formData, participation_status: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="looking_for_team">Шукаю команду</SelectItem>
+                          <SelectItem value="has_team">Маю команду</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="roles">Ролі *</Label>
+                      <Input
+                        id="roles"
+                        value={formData.roles}
+                        onChange={(e) => setFormData({...formData, roles: e.target.value})}
+                        placeholder="Frontend Developer, UI/UX Designer"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="skills">Навички *</Label>
+                      <Input
+                        id="skills"
+                        value={formData.skills}
+                        onChange={(e) => setFormData({...formData, skills: e.target.value})}
+                        placeholder="React, TypeScript, Figma"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="technologies">Технології</Label>
+                      <Input
+                        id="technologies"
+                        value={formData.technologies}
+                        onChange={(e) => setFormData({...formData, technologies: e.target.value})}
+                        placeholder="Python, Docker, AWS"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="experience_level">Рівень досвіду *</Label>
+                      <Select value={formData.experience_level} onValueChange={(value) => setFormData({...formData, experience_level: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Початковий</SelectItem>
+                          <SelectItem value="intermediate">Середній</SelectItem>
+                          <SelectItem value="advanced">Досвідчений</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="portfolio_url">Посилання на профіль/портфоліо *</Label>
+                      <Input
+                        id="portfolio_url"
+                        value={formData.portfolio_url}
+                        onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})}
+                        placeholder="https://github.com/username або https://linkedin.com/in/username"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Пароль *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    placeholder="Мінімум 6 символів"
-                  />
+
+                {/* Необов'язкові поля */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Необов'язкові поля</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Локація</Label>
+                      <Input
+                        id="location"
+                        value={formData.location}
+                        onChange={(e) => setFormData({...formData, location: e.target.value})}
+                        placeholder="Київ, Україна"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="interested_categories">Цікаві категорії</Label>
+                      <Input
+                        id="interested_categories"
+                        value={formData.interested_categories}
+                        onChange={(e) => setFormData({...formData, interested_categories: e.target.value})}
+                        placeholder="держсервіси, освіта, медіа"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Готовність бути капітаном</Label>
+                      <div className="flex items-center space-x-4">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="ready_to_lead"
+                            checked={formData.ready_to_lead === true}
+                            onChange={() => setFormData({...formData, ready_to_lead: true})}
+                          />
+                          <span>Так</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="ready_to_lead"
+                            checked={formData.ready_to_lead === false}
+                            onChange={() => setFormData({...formData, ready_to_lead: false})}
+                          />
+                          <span>Ні</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="bio">Коротко про себе</Label>
+                      <Textarea
+                        id="bio"
+                        value={formData.bio}
+                        onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                        placeholder="Розкажіть про себе..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">Ім'я *</Label>
-                  <Input
-                    id="first_name"
-                    value={formData.first_name}
-                    onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                    placeholder="Ім'я"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last_name">Прізвище *</Label>
-                  <Input
-                    id="last_name"
-                    value={formData.last_name}
-                    onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                    placeholder="Прізвище"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Телефон</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    placeholder="+380..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="experience_level">Рівень досвіду</Label>
-                  <Select value={formData.experience_level} onValueChange={(value) => setFormData({...formData, experience_level: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Оберіть рівень" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="junior">Junior</SelectItem>
-                      <SelectItem value="middle">Middle</SelectItem>
-                      <SelectItem value="senior">Senior</SelectItem>
-                      <SelectItem value="expert">Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="participation_status">Статус участі</Label>
-                  <Select value={formData.participation_status} onValueChange={(value) => setFormData({...formData, participation_status: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="looking_for_team">Шукаю команду</SelectItem>
-                      <SelectItem value="has_team">Маю команду</SelectItem>
-                      <SelectItem value="not_participating">Не беру участь</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="roles">Ролі (через кому)</Label>
-                  <Input
-                    id="roles"
-                    value={formData.roles}
-                    onChange={(e) => setFormData({...formData, roles: e.target.value})}
-                    placeholder="Frontend Developer, UI/UX Designer"
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="skills">Навички (через кому)</Label>
-                  <Input
-                    id="skills"
-                    value={formData.skills}
-                    onChange={(e) => setFormData({...formData, skills: e.target.value})}
-                    placeholder="React, TypeScript, Figma"
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="bio">Біографія</Label>
-                  <Textarea
-                    id="bio"
-                    value={formData.bio}
-                    onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                    placeholder="Розкажіть про себе..."
-                  />
-                </div>
+
+                {/* Поля для команди */}
+                {formData.participation_status === 'has_team' && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Інформація про команду</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="existing_team_name">Назва команди</Label>
+                        <Input
+                          id="existing_team_name"
+                          value={formData.existing_team_name}
+                          onChange={(e) => setFormData({...formData, existing_team_name: e.target.value})}
+                          placeholder="Назва вашої команди"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="looking_for_roles">Шукають ролі</Label>
+                        <Input
+                          id="looking_for_roles"
+                          value={formData.looking_for_roles}
+                          onChange={(e) => setFormData({...formData, looking_for_roles: e.target.value})}
+                          placeholder="Data Scientist, Frontend Developer"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="team_description">Опис команди</Label>
+                        <Textarea
+                          id="team_description"
+                          value={formData.team_description}
+                          onChange={(e) => setFormData({...formData, team_description: e.target.value})}
+                          placeholder="Коротко про команду та її проект"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
@@ -504,92 +687,218 @@ export default function UsersManagement() {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Редагувати користувача</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit_first_name">Ім'я *</Label>
-              <Input
-                id="edit_first_name"
-                value={formData.first_name}
-                onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                placeholder="Ім'я"
-              />
+          <div className="space-y-6 py-4">
+            {/* Обов'язкові поля */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Обов'язкові поля</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit_first_name">Ім'я *</Label>
+                  <Input
+                    id="edit_first_name"
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                    placeholder="Ім'я"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_last_name">Прізвище *</Label>
+                  <Input
+                    id="edit_last_name"
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                    placeholder="Прізвище"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_phone">Телефон</Label>
+                  <Input
+                    id="edit_phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    placeholder="+380..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_telegram">Telegram</Label>
+                  <Input
+                    id="edit_telegram"
+                    value={formData.telegram}
+                    onChange={(e) => setFormData({...formData, telegram: e.target.value})}
+                    placeholder="@username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_discord">Discord</Label>
+                  <Input
+                    id="edit_discord"
+                    value={formData.discord}
+                    onChange={(e) => setFormData({...formData, discord: e.target.value})}
+                    placeholder="username#1234"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_participation_status">Статус участі *</Label>
+                  <Select value={formData.participation_status} onValueChange={(value) => setFormData({...formData, participation_status: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="looking_for_team">Шукаю команду</SelectItem>
+                      <SelectItem value="has_team">Маю команду</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_roles">Ролі *</Label>
+                  <Input
+                    id="edit_roles"
+                    value={formData.roles}
+                    onChange={(e) => setFormData({...formData, roles: e.target.value})}
+                    placeholder="Frontend Developer, UI/UX Designer"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_skills">Навички *</Label>
+                  <Input
+                    id="edit_skills"
+                    value={formData.skills}
+                    onChange={(e) => setFormData({...formData, skills: e.target.value})}
+                    placeholder="React, TypeScript, Figma"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_technologies">Технології</Label>
+                  <Input
+                    id="edit_technologies"
+                    value={formData.technologies}
+                    onChange={(e) => setFormData({...formData, technologies: e.target.value})}
+                    placeholder="Python, Docker, AWS"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_experience_level">Рівень досвіду *</Label>
+                  <Select value={formData.experience_level} onValueChange={(value) => setFormData({...formData, experience_level: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Початковий</SelectItem>
+                      <SelectItem value="intermediate">Середній</SelectItem>
+                      <SelectItem value="advanced">Досвідчений</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="edit_portfolio_url">Посилання на профіль/портфоліо *</Label>
+                  <Input
+                    id="edit_portfolio_url"
+                    value={formData.portfolio_url}
+                    onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})}
+                    placeholder="https://github.com/username або https://linkedin.com/in/username"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_last_name">Прізвище *</Label>
-              <Input
-                id="edit_last_name"
-                value={formData.last_name}
-                onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                placeholder="Прізвище"
-              />
+
+            {/* Необов'язкові поля */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Необов'язкові поля</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit_location">Локація</Label>
+                  <Input
+                    id="edit_location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    placeholder="Київ, Україна"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit_interested_categories">Цікаві категорії</Label>
+                  <Input
+                    id="edit_interested_categories"
+                    value={formData.interested_categories}
+                    onChange={(e) => setFormData({...formData, interested_categories: e.target.value})}
+                    placeholder="держсервіси, освіта, медіа"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Готовність бути капітаном</Label>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="edit_ready_to_lead"
+                        checked={formData.ready_to_lead === true}
+                        onChange={() => setFormData({...formData, ready_to_lead: true})}
+                      />
+                      <span>Так</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="edit_ready_to_lead"
+                        checked={formData.ready_to_lead === false}
+                        onChange={() => setFormData({...formData, ready_to_lead: false})}
+                      />
+                      <span>Ні</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="edit_bio">Коротко про себе</Label>
+                  <Textarea
+                    id="edit_bio"
+                    value={formData.bio}
+                    onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                    placeholder="Розкажіть про себе..."
+                    rows={3}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_phone">Телефон</Label>
-              <Input
-                id="edit_phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                placeholder="+380..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_experience_level">Рівень досвіду</Label>
-              <Select value={formData.experience_level} onValueChange={(value) => setFormData({...formData, experience_level: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Оберіть рівень" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="junior">Junior</SelectItem>
-                  <SelectItem value="middle">Middle</SelectItem>
-                  <SelectItem value="senior">Senior</SelectItem>
-                  <SelectItem value="expert">Expert</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_participation_status">Статус участі</Label>
-              <Select value={formData.participation_status} onValueChange={(value) => setFormData({...formData, participation_status: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="looking_for_team">Шукаю команду</SelectItem>
-                  <SelectItem value="has_team">Маю команду</SelectItem>
-                  <SelectItem value="not_participating">Не беру участь</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_roles">Ролі (через кому)</Label>
-              <Input
-                id="edit_roles"
-                value={formData.roles}
-                onChange={(e) => setFormData({...formData, roles: e.target.value})}
-                placeholder="Frontend Developer, UI/UX Designer"
-              />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="edit_skills">Навички (через кому)</Label>
-              <Input
-                id="edit_skills"
-                value={formData.skills}
-                onChange={(e) => setFormData({...formData, skills: e.target.value})}
-                placeholder="React, TypeScript, Figma"
-              />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="edit_bio">Біографія</Label>
-              <Textarea
-                id="edit_bio"
-                value={formData.bio}
-                onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                placeholder="Розкажіть про себе..."
-              />
-            </div>
+
+            {/* Поля для команди */}
+            {formData.participation_status === 'has_team' && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Інформація про команду</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_existing_team_name">Назва команди</Label>
+                    <Input
+                      id="edit_existing_team_name"
+                      value={formData.existing_team_name}
+                      onChange={(e) => setFormData({...formData, existing_team_name: e.target.value})}
+                      placeholder="Назва вашої команди"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_looking_for_roles">Шукають ролі</Label>
+                    <Input
+                      id="edit_looking_for_roles"
+                      value={formData.looking_for_roles}
+                      onChange={(e) => setFormData({...formData, looking_for_roles: e.target.value})}
+                      placeholder="Data Scientist, Frontend Developer"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_team_description">Опис команди</Label>
+                    <Textarea
+                      id="edit_team_description"
+                      value={formData.team_description}
+                      onChange={(e) => setFormData({...formData, team_description: e.target.value})}
+                      placeholder="Коротко про команду та її проект"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {setIsEditModalOpen(false); setEditingUser(null); resetForm();}}>
