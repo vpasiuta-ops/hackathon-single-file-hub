@@ -9,11 +9,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { SkillsSelector } from '@/components/SkillsSelector';
-import { User, Mail, Phone, MessageCircle, Users, Briefcase, Award, Link, FileText, MapPin, Clock, Target, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Phone, MessageCircle, Users, Briefcase, Award, Link, FileText, MapPin, Clock, Target, Shield, ArrowLeft } from 'lucide-react';
 
 export default function ProfileCompletionPage() {
   const { user, profile, completeProfile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     // Обов'язкові поля
@@ -257,8 +259,12 @@ export default function ProfileCompletionPage() {
       } else {
         toast({
           title: 'Успішно!',
-          description: 'Профіль успішно заповнено'
+          description: profile?.is_profile_complete ? 'Профіль успішно оновлено' : 'Профіль успішно заповнено'
         });
+        // Повертаємо користувача назад після успішного збереження
+        setTimeout(() => {
+          navigate(-1);
+        }, 1500);
       }
     } catch (error) {
       toast({
@@ -274,6 +280,18 @@ export default function ProfileCompletionPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
+        {/* Кнопка повернення назад */}
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Назад
+          </Button>
+        </div>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
             {profile?.is_profile_complete ? 'Редагування профілю' : 'Завершіть свій профіль'}
