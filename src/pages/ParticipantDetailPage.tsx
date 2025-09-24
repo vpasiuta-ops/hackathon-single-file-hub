@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Github, Linkedin, ExternalLink, MapPin, Clock, Users, User } from "lucide-react";
+import { ArrowLeft, Github, Linkedin, ExternalLink, MapPin, Clock, Users, User, Mail, MessageCircle } from "lucide-react";
 import { useProfile } from "@/hooks/useProfiles";
 import { Link } from "react-router-dom";
 
@@ -118,6 +118,45 @@ export default function ParticipantDetailPage() {
               <CardTitle className="text-lg">Контактна інформація</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {profile.email && (
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground-secondary flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email:
+                  </span>
+                  <a 
+                    href={`mailto:${profile.email}`}
+                    className="text-primary hover:underline"
+                  >
+                    {profile.email}
+                  </a>
+                </div>
+              )}
+              {profile.telegram && (
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground-secondary flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    Telegram:
+                  </span>
+                  <a 
+                    href={`https://t.me/${profile.telegram.replace('@', '')}`}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {profile.telegram}
+                  </a>
+                </div>
+              )}
+              {profile.discord && (
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground-secondary flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    Discord:
+                  </span>
+                  <span className="text-foreground">{profile.discord}</span>
+                </div>
+              )}
               {profile.portfolio_url && (
                 <div className="flex items-center justify-between">
                   <span className="text-foreground-secondary">Портфоліо:</span>

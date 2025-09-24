@@ -7,6 +7,9 @@ export interface Profile {
   first_name?: string;
   last_name?: string;
   phone?: string;
+  email?: string;
+  telegram?: string;
+  discord?: string;
   experience_level?: string;
   roles?: string[];
   skills?: string[];
