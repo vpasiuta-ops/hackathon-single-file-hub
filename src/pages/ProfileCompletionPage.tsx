@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,9 @@ import { SkillsSelector } from '@/components/SkillsSelector';
 import { User, Mail, Phone, MessageCircle, Users, Briefcase, Award, Link, FileText, MapPin, Clock, Target, Shield } from 'lucide-react';
 
 export default function ProfileCompletionPage() {
+  const { user, profile, completeProfile } = useAuth();
+  const { toast } = useToast();
+  
   const [formData, setFormData] = useState({
     // Обов'язкові поля
     full_name: '',
@@ -44,9 +47,36 @@ export default function ProfileCompletionPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { completeProfile } = useAuth();
-  const { toast } = useToast();
+
+  // Ініціалізуємо форму з існуючими даними профілю
+  useEffect(() => {
+    if (user && profile) {
+      setFormData(prev => ({
+        ...prev,
+        full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+        email: user.email || '',
+        phone: profile.phone || '',
+        telegram: profile.telegram || '',
+        discord: profile.discord || '',
+        participation_status: profile.participation_status || '',
+        roles: profile.roles || [],
+        skills: profile.skills || [],
+        experience_level: profile.experience_level || '',
+        portfolio_url: profile.portfolio_url || '',
+        bio: profile.bio || '',
+        location: profile.location || '',
+        ready_to_lead: profile.ready_to_lead ? 'Так' : profile.ready_to_lead === false ? 'Ні' : '',
+        interested_categories: profile.interested_categories || [],
+        team_name: profile.existing_team_name || '',
+        team_description: profile.team_description || '',
+        looking_for_roles: profile.looking_for_roles || [],
+        // Згоди залишаємо як є, щоб користувач міг їх оновити
+        rules_consent: true,
+        privacy_consent: true,
+        email_consent: true
+      }));
+    }
+  }, [user, profile]);
 
   const roleOptions = [
     'Data Scientist', 'ML Engineer', 'Backend', 'Frontend', 
@@ -198,6 +228,9 @@ export default function ProfileCompletionPage() {
         first_name,
         last_name,
         phone: formData.phone,
+        email: formData.email,
+        telegram: formData.telegram,
+        discord: formData.discord,
         bio: formData.bio,
         skills: formData.skills,
         participation_status: formData.participation_status,
@@ -243,10 +276,13 @@ export default function ProfileCompletionPage() {
       <div className="w-full max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Завершіть свій профіль
+            {profile?.is_profile_complete ? 'Редагування профілю' : 'Завершіть свій профіль'}
           </h1>
           <p className="text-foreground-secondary">
-            Заповніть інформацію про себе, щоб інші учасники могли знайти вас
+            {profile?.is_profile_complete 
+              ? 'Оновіть інформацію про себе'
+              : 'Заповніть інформацію про себе, щоб інші учасники могли знайти вас'
+            }
           </p>
         </div>
 
