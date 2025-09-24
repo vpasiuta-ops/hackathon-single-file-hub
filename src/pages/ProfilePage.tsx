@@ -90,7 +90,7 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold text-foreground">Мій профіль</h1>
           <Button 
             variant="outline"
-            onClick={() => navigate('/create-profile')}
+            onClick={() => navigate('/complete-profile')}
           >
             <Edit className="w-4 h-4 mr-2" />
             Редагувати профіль
