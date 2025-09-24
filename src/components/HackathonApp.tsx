@@ -31,7 +31,7 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
   // Start with correct page based on auth status
   const [currentPage, setCurrentPage] = useState(isAuthenticated ? 'hackathons' : 'home');
   const [currentRole, setCurrentRole] = useState<UserRole>('guest');
-  const [selectedHackathonId, setSelectedHackathonId] = useState<number | null>(null);
+  const [selectedHackathonId, setSelectedHackathonId] = useState<string | null>(null);
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -68,7 +68,7 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
     navigate(`/team/${teamId}`);
   };
 
-  const handleViewHackathon = (id: number) => {
+  const handleViewHackathon = (id: string) => {
     // Check if user is authenticated
     if (!user) {
       navigate('/auth');

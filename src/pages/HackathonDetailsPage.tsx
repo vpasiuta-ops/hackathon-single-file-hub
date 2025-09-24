@@ -15,9 +15,10 @@ import {
   Target,
   Award,
   CheckCircle2,
-  FileText
+  FileText,
+  Loader2
 } from "lucide-react";
-import { hackathons } from "@/data/mockData";
+import { useHackathon } from "@/hooks/useHackathons";
 import type { UserRole } from "@/data/mockData";
 import { useAuth } from '@/hooks/useAuth';
 import { useTeams } from '@/hooks/useTeams';
@@ -25,7 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface HackathonDetailsPageProps {
-  hackathonId: number | null;
+  hackathonId: string | null;
   currentRole: UserRole;
   onBack: () => void;
 }
@@ -34,7 +35,7 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
   const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   
-  const hackathon = hackathons.find(h => h.id === hackathonId);
+  const { hackathon, loading, error } = useHackathon(hackathonId);
   const { user } = useAuth();
   const { userTeam, isUserTeamCaptain } = useTeams();
   const { toast } = useToast();
@@ -48,7 +49,7 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
         .from('hackathon_registrations')
         .select('id')
         .eq('team_id', userTeam.id)
-        .eq('hackathon_id', hackathonId?.toString())
+        .eq('hackathon_id', hackathonId)
         .maybeSingle();
       
       setIsRegistered(!!data);
@@ -72,7 +73,7 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
     const { error } = await supabase
       .from('hackathon_registrations')
       .insert([{
-        hackathon_id: hackathonId?.toString(),
+        hackathon_id: hackathonId,
         team_id: userTeam.id,
         registered_by: user.id
       }]);
@@ -94,12 +95,25 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
     setIsRegistering(false);
   };
 
-  if (!hackathon) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background py-20">
+        <div className="max-w-2xl mx-auto px-4 text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground mb-4">
+            Завантажуємо хакатон...
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !hackathon) {
     return (
       <div className="min-h-screen bg-background py-20">
         <div className="max-w-2xl mx-auto px-4 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">
-            Хакатон не знайдено
+            {error || 'Хакатон не знайдено'}
           </h1>
           <Button onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -165,16 +179,16 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
               <div className="flex flex-wrap gap-4 mt-6">
                 <div className="flex items-center gap-2 text-foreground-secondary">
                   <Calendar className="w-5 h-5" />
-                  <span>{formatDate(hackathon.startDate)} - {formatDate(hackathon.endDate)}</span>
+                  <span>{formatDate(hackathon.start_date)} - {formatDate(hackathon.end_date)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-foreground-secondary">
                   <Users className="w-5 h-5" />
-                  <span>Команди до {hackathon.maxTeamSize} осіб</span>
+                  <span>Команди до {hackathon.max_team_size} осіб</span>
                 </div>
-                {hackathon.prizes.length > 0 && (
+                {(hackathon.prize_fund || hackathon.prizes.length > 0) && (
                   <div className="flex items-center gap-2 text-foreground-secondary">
                     <Trophy className="w-5 h-5" />
-                    <span>Призовий фонд: {hackathon.prizes[0].amount}</span>
+                    <span>Призовий фонд: {hackathon.prize_fund || hackathon.prizes[0]?.amount}</span>
                   </div>
                 )}
               </div>
@@ -234,7 +248,7 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
                     )}
                     
                     <p className="text-xs text-foreground-secondary mt-2 text-center">
-                      Дедлайн: {formatDate(hackathon.registrationDeadline)}
+                      Дедлайн: {formatDate(hackathon.registration_deadline)}
                     </p>
                   </CardContent>
                 </Card>
@@ -258,19 +272,24 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(hackathon.timeline).map(([key, value], index) => (
-                    <div key={key} className="flex items-center gap-4">
+                  {hackathon.timeline.map((item: any, index: number) => (
+                    <div key={item.id || index} className="flex items-center gap-4">
                       <div className={`
                         w-4 h-4 rounded-full flex-shrink-0
-                        ${index === 0 ? 'bg-primary animate-pulse' : 'bg-secondary'}
+                        ${item.is_current ? 'bg-primary animate-pulse' : 'bg-secondary'}
                       `} />
                       <div className="flex-1">
-                        <div className="font-medium text-foreground capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                        <div className="font-medium text-foreground">
+                          {item.name}
                         </div>
-                        <div className="text-sm text-foreground-secondary">{value}</div>
+                        <div className="text-sm text-foreground-secondary">
+                          {item.start_datetime && item.end_datetime 
+                            ? `${new Date(item.start_datetime).toLocaleString('uk-UA')} - ${new Date(item.end_datetime).toLocaleString('uk-UA')}`
+                            : 'Час буде оголошено'
+                          }
+                        </div>
                       </div>
-                      {index === 0 && (
+                      {item.is_current && (
                         <Badge variant="secondary" className="bg-primary text-white">
                           Поточний етап
                         </Badge>
@@ -282,7 +301,7 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
             </Card>
 
             {/* Cases */}
-            {hackathon.cases.length > 0 && (
+            {hackathon.partner_cases.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -292,20 +311,20 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {hackathon.cases.map((case_, index) => (
-                      <Card key={case_.id} className="bg-background-secondary">
+                    {hackathon.partner_cases.map((case_: any, index: number) => (
+                      <Card key={case_.id || index} className="bg-background-secondary">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-3">
-                            <h4 className="font-semibold text-foreground">{case_.title}</h4>
+                            <h4 className="font-semibold text-foreground">{case_.name}</h4>
                             <Badge className="bg-green-500 text-white">
-                              {case_.prize}
+                              {case_.reward}
                             </Badge>
                           </div>
                           <p className="text-foreground-secondary mb-3">
                             {case_.description}
                           </p>
                           <div className="text-sm text-primary font-medium">
-                            Партнер: {case_.sponsor}
+                            Партнер: {case_.partner}
                           </div>
                         </CardContent>
                       </Card>
@@ -316,7 +335,7 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
             )}
 
             {/* Rules */}
-            {hackathon.rules.length > 0 && (
+            {hackathon.rules_and_requirements && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -325,13 +344,10 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {hackathon.rules.map((rule, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-foreground-secondary">{rule}</span>
-                      </div>
-                    ))}
+                  <div className="prose prose-invert max-w-none">
+                    <p className="text-foreground-secondary whitespace-pre-wrap">
+                      {hackathon.rules_and_requirements}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -351,8 +367,8 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {hackathon.prizes.map((prize, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-background-secondary rounded-lg">
+                    {hackathon.prizes.map((prize: any, index: number) => (
+                      <div key={prize.id || index} className="flex justify-between items-center p-3 bg-background-secondary rounded-lg">
                         <div>
                           <div className="font-medium text-foreground">{prize.place}</div>
                           <div className="text-sm text-foreground-secondary">{prize.description}</div>
@@ -368,7 +384,7 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
             )}
 
             {/* Criteria */}
-            {hackathon.criteria.length > 0 && (
+            {hackathon.evaluation_criteria.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -378,13 +394,12 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {hackathon.criteria.map((criterion, index) => (
-                      <div key={index}>
+                    {hackathon.evaluation_criteria.map((criterion: any, index: number) => (
+                      <div key={criterion.id || index}>
                         <div className="flex justify-between items-center mb-1">
                           <span className="font-medium text-foreground">{criterion.name}</span>
                           <span className="text-sm text-foreground-secondary">{criterion.weight}%</span>
                         </div>
-                        <p className="text-sm text-foreground-secondary">{criterion.description}</p>
                         <div className="w-full bg-secondary rounded-full h-2 mt-2">
                           <div 
                             className="bg-primary h-2 rounded-full transition-all"
@@ -420,7 +435,7 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
             )}
 
             {/* Judges */}
-            {hackathon.judges.length > 0 && (
+            {hackathon.jury.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -430,14 +445,18 @@ export default function HackathonDetailsPage({ hackathonId, currentRole, onBack 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {hackathon.judges.map((judgeId, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5" />
+                    {hackathon.jury.map((judge: any, index: number) => (
+                      <div key={judge.id || index} className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center overflow-hidden">
+                          {judge.photo ? (
+                            <img src={judge.photo} alt={judge.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-5 h-5" />
+                          )}
                         </div>
                         <div>
-                          <div className="font-medium text-foreground">Суддя #{judgeId}</div>
-                          <div className="text-sm text-foreground-secondary">Експерт галузі</div>
+                          <div className="font-medium text-foreground">{judge.name}</div>
+                          <div className="text-sm text-foreground-secondary">{judge.position}</div>
                         </div>
                       </div>
                     ))}

@@ -8,7 +8,7 @@ import type { UserRole } from "@/data/mockData";
 interface HomePageProps {
   currentRole: UserRole;
   onPageChange: (page: string) => void;
-  onViewHackathon: (id: number) => void;
+  onViewHackathon: (id: string) => void;
 }
 export default function HomePage({
   currentRole,

@@ -3,19 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Filter, Plus } from "lucide-react";
+import { Search, Filter, Plus, Loader2 } from "lucide-react";
 import HackathonCard from "@/components/HackathonCard";
-import { hackathons } from "@/data/mockData";
-import type { UserRole, Hackathon } from "@/data/mockData";
+import { useHackathons, type DbHackathon } from "@/hooks/useHackathons";
+import type { UserRole } from "@/data/mockData";
 
 interface HackathonsPageProps {
   currentRole: UserRole;
-  onViewHackathon: (id: number) => void;
+  onViewHackathon: (id: string) => void;
 }
 
 export default function HackathonsPage({ currentRole, onViewHackathon }: HackathonsPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const { hackathons, loading, error } = useHackathons();
 
   const filteredHackathons = hackathons.filter(hackathon => {
     const matchesSearch = hackathon.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -30,7 +31,7 @@ export default function HackathonsPage({ currentRole, onViewHackathon }: Hackath
     'Завершений': hackathons.filter(h => h.status === 'Завершений').length,
   };
 
-  const handleRegister = (hackathonId: number) => {
+  const handleRegister = (hackathonId: string) => {
     console.log('Register for hackathon:', hackathonId);
     // Тут буде логіка реєстрації
   };
@@ -101,7 +102,24 @@ export default function HackathonsPage({ currentRole, onViewHackathon }: Hackath
         </Card>
 
         {/* Results */}
-        {filteredHackathons.length === 0 ? (
+        {loading ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-lg text-foreground">Завантажуємо хакатони...</p>
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="text-foreground-secondary mb-4">
+                <Filter className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg text-red-500">Помилка завантаження</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : filteredHackathons.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <div className="text-foreground-secondary mb-4">

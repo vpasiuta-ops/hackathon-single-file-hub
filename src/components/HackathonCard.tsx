@@ -2,12 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Calendar, MapPin, Users, Trophy, Clock } from "lucide-react";
-import type { Hackathon } from "@/data/mockData";
+import type { DbHackathon } from "@/hooks/useHackathons";
 
 interface HackathonCardProps {
-  hackathon: Hackathon;
-  onViewDetails?: (id: number) => void;
-  onRegister?: (id: number) => void;
+  hackathon: DbHackathon;
+  onViewDetails?: (id: string) => void;
+  onRegister?: (id: string) => void;
   showActions?: boolean;
 }
 
@@ -33,9 +33,9 @@ export default function HackathonCard({ hackathon, onViewDetails, onRegister, sh
   };
 
   const daysRemaining = hackathon.status === 'Майбутній' 
-    ? getDaysRemaining(hackathon.startDate)
+    ? getDaysRemaining(hackathon.start_date)
     : hackathon.status === 'Активний'
-    ? getDaysRemaining(hackathon.endDate)
+    ? getDaysRemaining(hackathon.end_date)
     : null;
 
   return (
@@ -47,7 +47,7 @@ export default function HackathonCard({ hackathon, onViewDetails, onRegister, sh
               {hackathon.title}
             </h3>
             <p className="text-sm text-foreground-secondary mt-1">
-              {hackathon.shortDescription}
+              {hackathon.short_description}
             </p>
           </div>
           <Badge 
@@ -70,7 +70,7 @@ export default function HackathonCard({ hackathon, onViewDetails, onRegister, sh
             <Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
             <div>
               <div className="text-foreground">
-                {formatDate(hackathon.startDate)} - {formatDate(hackathon.endDate)}
+                {formatDate(hackathon.start_date)} - {formatDate(hackathon.end_date)}
               </div>
               {daysRemaining !== null && (
                 <div className="text-foreground-secondary flex items-center gap-1">
@@ -90,7 +90,7 @@ export default function HackathonCard({ hackathon, onViewDetails, onRegister, sh
           <div className="flex items-center gap-2 text-sm">
             <Users className="w-4 h-4 text-primary" />
             <span className="text-foreground">
-              Команди до {hackathon.maxTeamSize} осіб
+              Команди до {hackathon.max_team_size} осіб
             </span>
           </div>
 
@@ -99,7 +99,7 @@ export default function HackathonCard({ hackathon, onViewDetails, onRegister, sh
             <div className="flex items-center gap-2 text-sm">
               <Trophy className="w-4 h-4 text-primary" />
               <span className="text-foreground">
-                Призовий фонд: {hackathon.prizes[0]?.amount || 'TBA'}
+                Призовий фонд: {hackathon.prize_fund || hackathon.prizes[0]?.amount || 'TBA'}
               </span>
             </div>
           )}
