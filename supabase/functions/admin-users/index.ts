@@ -73,6 +73,20 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Create complete profile
       if (authData.user) {
+        // Check if profile already exists (cleanup orphaned profiles)
+        const { data: existingProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('id, user_id')
+          .eq('user_id', authData.user.id);
+
+        if (existingProfile && existingProfile.length > 0) {
+          console.log('Found existing profile for user_id, deleting it:', authData.user.id);
+          await supabaseAdmin
+            .from('profiles')
+            .delete()
+            .eq('user_id', authData.user.id);
+        }
+
         const profileData = {
           user_id: authData.user.id,
           first_name: userData.first_name,
@@ -94,12 +108,15 @@ const handler = async (req: Request): Promise<Response> => {
           is_profile_complete: true
         };
 
+        console.log('Attempting to create profile with data:', JSON.stringify(profileData, null, 2));
+
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
           .insert([profileData]);
 
         if (profileError) {
           console.error('Profile creation error:', profileError);
+          console.error('Profile data that failed:', JSON.stringify(profileData, null, 2));
           // If profile creation fails, delete the auth user
           await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
           throw profileError;
