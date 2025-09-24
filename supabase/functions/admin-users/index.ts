@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
           portfolio_url: userData.portfolio_url || null,
           bio: userData.bio || null,
           location: userData.location || null,
-          ready_to_lead: userData.ready_to_lead,
+          ready_to_lead: Boolean(userData.ready_to_lead),
           interested_categories: userData.interested_categories ? userData.interested_categories.split(',').map((c: string) => c.trim()).filter(Boolean) : [],
           existing_team_name: userData.existing_team_name || null,
           looking_for_roles: userData.looking_for_roles ? userData.looking_for_roles.split(',').map((r: string) => r.trim()).filter(Boolean) : [],
