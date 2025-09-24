@@ -12,6 +12,7 @@ import AdminPage from "./pages/AdminPage";
 import { AdminAuthProvider } from "./hooks/useAdminAuth";
 import RegistrationPage from "./pages/RegistrationPage";
 import TeamDetailPage from "./pages/TeamDetailPage";
+import ParticipantDetailPage from "./pages/ParticipantDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/complete-profile" element={<ProfileCompletionPage />} />
               <Route path="/register" element={<RegistrationPage />} />
               <Route path="/team/:teamId" element={<TeamDetailPage />} />
+              <Route path="/participant/:userId" element={<ParticipantDetailPage />} />
               <Route path="/*" element={<Index />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

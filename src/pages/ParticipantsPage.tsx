@@ -5,44 +5,75 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Filter, UserPlus } from "lucide-react";
 import UserCard from "@/components/UserCard";
-import { users } from "@/data/mockData";
-import type { UserRole, User } from "@/data/mockData";
+import { useProfiles } from "@/hooks/useProfiles";
+import type { Profile } from "@/hooks/useProfiles";
 
 interface ParticipantsPageProps {
-  currentRole: UserRole;
+  currentRole?: string;
 }
 
 export default function ParticipantsPage({ currentRole }: ParticipantsPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
+  
+  const { profiles, loading, error } = useProfiles();
 
-  // Фільтруємо тільки учасників та капітанів
-  const participantUsers = users.filter(user => 
-    user.role === 'participant' || user.role === 'captain'
-  );
-
-  const filteredUsers = participantUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = !statusFilter || user.status === statusFilter;
-    const matchesSkill = !skillFilter || user.skills.includes(skillFilter);
+  const filteredProfiles = profiles.filter(profile => {
+    const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ').toLowerCase();
+    const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
+                         (profile.skills || []).some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = !statusFilter || profile.participation_status === statusFilter;
+    const matchesSkill = !skillFilter || (profile.skills || []).includes(skillFilter);
     return matchesSearch && matchesStatus && matchesSkill;
   });
 
   const statusCounts = {
-    'шукаю команду': participantUsers.filter(u => u.status === 'шукаю команду').length,
-    'в команді': participantUsers.filter(u => u.status === 'в команді').length,
-    'готовий': participantUsers.filter(u => u.status === 'готовий').length,
+    'looking_for_team': profiles.filter(p => p.participation_status === 'looking_for_team').length,
+    'in_team': profiles.filter(p => p.participation_status === 'in_team').length,
+    'ready': profiles.filter(p => p.participation_status === 'ready').length,
+  };
+
+  const statusLabels = {
+    'looking_for_team': 'шукаю команду',
+    'in_team': 'в команді', 
+    'ready': 'готовий',
   };
 
   // Отримуємо всі унікальні навички
-  const allSkills = [...new Set(participantUsers.flatMap(user => user.skills))];
+  const allSkills = [...new Set(profiles.flatMap(profile => profile.skills || []))];
 
-  const handleInviteToTeam = (userId: number) => {
+  const handleInviteToTeam = (userId: string) => {
     console.log('Invite user to team:', userId);
     // Тут буде логіка запрошення в команду
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-foreground-secondary">Завантаження учасників...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <UserPlus className="w-12 h-12 mx-auto mb-4 text-foreground-secondary opacity-50" />
+            <p className="text-lg text-foreground mb-2">Помилка завантаження</p>
+            <p className="text-sm text-foreground-secondary">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background py-8">
@@ -81,7 +112,7 @@ export default function ParticipantsPage({ currentRole }: ParticipantsPageProps)
                     size="sm"
                     onClick={() => setStatusFilter(null)}
                   >
-                    Всі ({participantUsers.length})
+                    Всі ({profiles.length})
                   </Button>
                   {Object.entries(statusCounts).map(([status, count]) => (
                     <Button
@@ -90,7 +121,7 @@ export default function ParticipantsPage({ currentRole }: ParticipantsPageProps)
                       size="sm"
                       onClick={() => setStatusFilter(status === statusFilter ? null : status)}
                     >
-                      {status} ({count})
+                      {statusLabels[status as keyof typeof statusLabels]} ({count})
                     </Button>
                   ))}
                 </div>
@@ -124,7 +155,7 @@ export default function ParticipantsPage({ currentRole }: ParticipantsPageProps)
         </Card>
 
         {/* Results */}
-        {filteredUsers.length === 0 ? (
+        {filteredProfiles.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <div className="text-foreground-secondary mb-4">
@@ -148,15 +179,15 @@ export default function ParticipantsPage({ currentRole }: ParticipantsPageProps)
           <>
             <div className="flex justify-between items-center mb-6">
               <p className="text-foreground-secondary">
-                Знайдено {filteredUsers.length} учасників
+                Знайдено {filteredProfiles.length} учасників
               </p>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredUsers.map((user) => (
+              {filteredProfiles.map((profile) => (
                 <UserCard
-                  key={user.id}
-                  user={user}
+                  key={profile.id}
+                  profile={profile}
                   showTeamActions={currentRole === 'captain'}
                   onInviteToTeam={handleInviteToTeam}
                 />
