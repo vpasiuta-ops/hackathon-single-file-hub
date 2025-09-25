@@ -16,16 +16,18 @@ declare global {
 }
 
 export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
+  const recaptchaRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const widgetIdRef = useRef<number | null>(null);
-  const containerIdRef = useRef(`recaptcha-${Date.now()}`);
+  const initAttemptRef = useRef(0);
 
   useEffect(() => {
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+    
     console.log('=== reCAPTCHA Ініціалізація ===');
     console.log('Site Key:', siteKey);
-    console.log('Container ID:', containerIdRef.current);
+    console.log('Домен:', window.location.hostname);
     
     if (!siteKey) {
       setError('Site Key не налаштований');
@@ -33,29 +35,44 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
     }
 
     const initializeRecaptcha = () => {
-      const container = document.getElementById(containerIdRef.current);
-      console.log('Container element:', container);
+      initAttemptRef.current += 1;
       
-      if (!container) {
-        console.error('Container не знайдено!');
-        setTimeout(initializeRecaptcha, 100);
+      // Перевіряємо чи DOM елемент готовий
+      if (!recaptchaRef.current) {
+        console.log(`Спроба #${initAttemptRef.current}: DOM елемент не готовий`);
+        if (initAttemptRef.current < 50) { // Максимум 50 спроб = 5 секунд
+          setTimeout(initializeRecaptcha, 100);
+        } else {
+          console.error('❌ DOM елемент не з\'явився після 50 спроб');
+          setError('DOM елемент недоступний');
+        }
         return;
       }
 
-      if (!window.grecaptcha) {
-        console.log('grecaptcha не готовий, чекаємо...');
-        setTimeout(initializeRecaptcha, 100);
+      // Перевіряємо чи Google reCAPTCHA API готовий
+      if (!window.grecaptcha || !window.grecaptcha.render) {
+        console.log(`Спроба #${initAttemptRef.current}: Google reCAPTCHA API не готовий`);
+        if (initAttemptRef.current < 50) {
+          setTimeout(initializeRecaptcha, 100);
+        } else {
+          console.error('❌ Google reCAPTCHA API не завантажився');
+          setError('Google reCAPTCHA API недоступний');
+        }
         return;
       }
 
+      // Якщо widget вже створений
       if (widgetIdRef.current !== null) {
-        console.log('Widget вже створений');
+        console.log('✅ Widget вже існує');
+        setIsLoaded(true);
         return;
       }
 
       try {
-        console.log('Створюємо reCAPTCHA widget...');
-        widgetIdRef.current = window.grecaptcha.render(container, {
+        console.log(`✅ Спроба #${initAttemptRef.current}: Створюємо reCAPTCHA widget...`);
+        console.log('DOM елемент:', recaptchaRef.current);
+        
+        widgetIdRef.current = window.grecaptcha.render(recaptchaRef.current, {
           sitekey: siteKey,
           callback: (token: string) => {
             console.log('✅ reCAPTCHA пройдена успішно');
@@ -83,9 +100,9 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
       }
     };
 
-    // Завантажуємо скрипт Google reCAPTCHA якщо його немає
+    // Завантажуємо Google reCAPTCHA скрипт
     if (!window.grecaptcha && !document.querySelector('script[src*="recaptcha"]')) {
-      console.log('Завантажуємо скрипт reCAPTCHA...');
+      console.log('Завантажуємо Google reCAPTCHA скрипт...');
       
       const script = document.createElement('script');
       script.src = 'https://www.google.com/recaptcha/api.js';
@@ -93,9 +110,9 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
       script.defer = true;
       
       script.onload = () => {
-        console.log('✅ Скрипт завантажено');
-        // Даємо трохи часу для ініціалізації API
-        setTimeout(initializeRecaptcha, 500);
+        console.log('✅ Скрипт завантажено, чекаємо DOM...');
+        // Даємо час для рендерингу DOM та ініціалізації API
+        setTimeout(initializeRecaptcha, 200);
       };
 
       script.onerror = () => {
@@ -105,7 +122,8 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
 
       document.head.appendChild(script);
     } else {
-      // Скрипт вже завантажений або завантажується
+      // Скрипт вже завантажений, запускаємо ініціалізацію
+      console.log('Скрипт вже завантажений, запускаємо ініціалізацію...');
       setTimeout(initializeRecaptcha, 100);
     }
 
@@ -119,7 +137,7 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
         widgetIdRef.current = null;
       }
     };
-  }, []); // Пусті залежності - виконується тільки один раз
+  }, []); // Пусті залежності
 
   if (error) {
     return (
@@ -127,6 +145,7 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
         <div className="text-center">
           <p className="text-sm text-destructive font-medium mb-2">❌ {error}</p>
           <div className="text-xs text-foreground-secondary space-y-1">
+            <p><strong>Спроб ініціалізації:</strong> {initAttemptRef.current}</p>
             <p><strong>Домен:</strong> {window.location.hostname}</p>
             <p><strong>Site Key:</strong> {import.meta.env.VITE_RECAPTCHA_SITE_KEY?.slice(0, 20)}...</p>
           </div>
@@ -144,6 +163,7 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
             <p className="text-sm text-foreground-secondary">Завантаження reCAPTCHA...</p>
           </div>
           <div className="text-xs text-foreground-secondary space-y-1">
+            <p><strong>Спроба:</strong> #{initAttemptRef.current}</p>
             <p><strong>Домен:</strong> {window.location.hostname}</p>
             <p><strong>Site Key:</strong> {import.meta.env.VITE_RECAPTCHA_SITE_KEY?.slice(0, 20)}...</p>
           </div>
@@ -154,7 +174,7 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
 
   return (
     <div className="flex justify-center">
-      <div id={containerIdRef.current} />
+      <div ref={recaptchaRef} className="recaptcha-container" />
     </div>
   );
 };
