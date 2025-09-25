@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface ReCaptchaProps {
   onChange: (token: string | null) => void;
@@ -21,6 +21,76 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
   const widgetIdRef = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const renderAttemptRef = useRef(0);
+
+  const renderRecaptcha = useCallback(() => {
+    renderAttemptRef.current += 1;
+    console.log(`Render attempt #${renderAttemptRef.current}`);
+    console.log('Attempting to render reCAPTCHA...');
+    console.log('grecaptcha available:', !!window.grecaptcha);
+    console.log('grecaptcha.render available:', !!(window.grecaptcha && window.grecaptcha.render));
+    console.log('recaptchaRef.current available:', !!recaptchaRef.current);
+    console.log('widgetIdRef.current:', widgetIdRef.current);
+    
+    if (!recaptchaRef.current) {
+      console.log('Ref not ready, scheduling retry...');
+      // Try again after DOM is ready
+      setTimeout(() => {
+        if (renderAttemptRef.current < 10 && isLoading) {
+          renderRecaptcha();
+        } else if (renderAttemptRef.current >= 10) {
+          console.error('Max render attempts reached');
+          setError('Failed to initialize reCAPTCHA - DOM element not available');
+          setIsLoading(false);
+        }
+      }, 200);
+      return;
+    }
+
+    if (!window.grecaptcha || !window.grecaptcha.render) {
+      console.log('Google reCAPTCHA not ready yet');
+      setTimeout(() => {
+        if (renderAttemptRef.current < 10 && isLoading) {
+          renderRecaptcha();
+        }
+      }, 200);
+      return;
+    }
+
+    if (widgetIdRef.current !== null) {
+      console.log('Widget already rendered');
+      return;
+    }
+
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+    
+    try {
+      console.log('Rendering reCAPTCHA with site key:', siteKey);
+      widgetIdRef.current = window.grecaptcha.render(recaptchaRef.current, {
+        sitekey: siteKey,
+        callback: (token: string) => {
+          console.log('reCAPTCHA success, token received');
+          onChange(token);
+          setError(null);
+        },
+        'expired-callback': () => {
+          console.log('reCAPTCHA expired');
+          onChange(null);
+        },
+        'error-callback': (error: any) => {
+          console.error('reCAPTCHA error:', error);
+          setError('reCAPTCHA error occurred');
+          onChange(null);
+        }
+      });
+      console.log('reCAPTCHA rendered successfully, widget ID:', widgetIdRef.current);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('reCAPTCHA render error:', err);
+      setError('Failed to load reCAPTCHA: ' + (err as Error).message);
+      setIsLoading(false);
+    }
+  }, [onChange, isLoading]);
 
   useEffect(() => {
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
@@ -35,55 +105,8 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
       return;
     }
 
-    const renderRecaptcha = () => {
-      console.log('Attempting to render reCAPTCHA...');
-      console.log('grecaptcha available:', !!window.grecaptcha);
-      console.log('grecaptcha.render available:', !!(window.grecaptcha && window.grecaptcha.render));
-      console.log('recaptchaRef.current available:', !!recaptchaRef.current);
-      
-      if (window.grecaptcha && window.grecaptcha.render && recaptchaRef.current && !widgetIdRef.current) {
-        try {
-          console.log('Rendering reCAPTCHA with site key:', siteKey);
-          widgetIdRef.current = window.grecaptcha.render(recaptchaRef.current, {
-            sitekey: siteKey,
-            callback: (token: string) => {
-              console.log('reCAPTCHA success, token received');
-              onChange(token);
-              setError(null);
-            },
-            'expired-callback': () => {
-              console.log('reCAPTCHA expired');
-              onChange(null);
-            },
-            'error-callback': (error: any) => {
-              console.error('reCAPTCHA error:', error);
-              setError('reCAPTCHA error occurred');
-              onChange(null);
-            }
-          });
-          console.log('reCAPTCHA rendered successfully, widget ID:', widgetIdRef.current);
-          setIsLoading(false);
-        } catch (err) {
-          console.error('reCAPTCHA render error:', err);
-          setError('Failed to load reCAPTCHA: ' + (err as Error).message);
-          setIsLoading(false);
-        }
-      } else {
-        console.log('Conditions not met for rendering:', {
-          grecaptcha: !!window.grecaptcha,
-          render: !!(window.grecaptcha && window.grecaptcha.render),
-          ref: !!recaptchaRef.current,
-          alreadyRendered: !!widgetIdRef.current
-        });
-        // Retry after a delay if conditions aren't met
-        setTimeout(() => {
-          if (isLoading) {
-            console.log('Retrying reCAPTCHA render...');
-            renderRecaptcha();
-          }
-        }, 1000);
-      }
-    };
+    // Reset attempt counter
+    renderAttemptRef.current = 0;
 
     // Check if reCAPTCHA is already loaded
     if (window.grecaptcha && window.grecaptcha.render) {
@@ -91,7 +114,8 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
       if (window.grecaptcha.ready) {
         window.grecaptcha.ready(renderRecaptcha);
       } else {
-        renderRecaptcha();
+        // Wait a bit for DOM to be ready
+        setTimeout(renderRecaptcha, 100);
       }
     } else {
       console.log('Loading reCAPTCHA script...');
@@ -108,16 +132,19 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
         window.onRecaptchaLoad = () => {
           console.log('reCAPTCHA script loaded via callback');
           if (window.grecaptcha.ready) {
-            window.grecaptcha.ready(renderRecaptcha);
+            window.grecaptcha.ready(() => {
+              // Wait for DOM
+              setTimeout(renderRecaptcha, 100);
+            });
           } else {
-            renderRecaptcha();
+            setTimeout(renderRecaptcha, 100);
           }
         };
 
         script.onload = () => {
           console.log('reCAPTCHA script loaded via onload');
           if (!window.onRecaptchaLoad) {
-            renderRecaptcha();
+            setTimeout(renderRecaptcha, 100);
           }
         };
 
@@ -131,7 +158,7 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
       } else {
         console.log('reCAPTCHA script already exists in DOM');
         // Script exists but maybe not loaded yet
-        setTimeout(renderRecaptcha, 1000);
+        setTimeout(renderRecaptcha, 500);
       }
     }
 
@@ -145,7 +172,7 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
         widgetIdRef.current = null;
       }
     };
-  }, [onChange, isLoading]);
+  }, [renderRecaptcha]);
 
   if (error) {
     return (
@@ -169,7 +196,7 @@ export const ReCaptcha = ({ onChange }: ReCaptchaProps) => {
             <p className="text-sm text-foreground-secondary">Завантаження reCAPTCHA...</p>
           </div>
           <p className="text-xs text-foreground-secondary">
-            Домен: {window.location.hostname}
+            Спроба #{renderAttemptRef.current} | Домен: {window.location.hostname}
           </p>
           <p className="text-xs text-foreground-secondary">
             Якщо завантаження триває довго, перевірте консоль браузера
