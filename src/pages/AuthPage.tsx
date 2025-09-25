@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { MockReCaptcha } from '@/components/MockReCaptcha';
+import { ReCaptcha } from '@/components/ReCaptcha';
 import { Eye, EyeOff, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
 
 export default function AuthPage() {
@@ -277,7 +277,7 @@ export default function AuthPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    <MockReCaptcha onChange={setRecaptchaToken} />
+                    <ReCaptcha onChange={setRecaptchaToken} />
                   </div>
                   
                   <Button 
