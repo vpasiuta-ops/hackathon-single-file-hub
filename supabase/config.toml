@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.delete-user-completely]
 verify_jwt = false
+
+[functions.verify-recaptcha]
+verify_jwt = false

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { ReCaptcha } from '@/components/ReCaptcha';
 import { Eye, EyeOff, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
 
 export default function AuthPage() {
@@ -19,6 +20,7 @@ export default function AuthPage() {
     confirmPassword: '' 
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
@@ -78,11 +80,20 @@ export default function AuthPage() {
       });
       return;
     }
+
+    if (!recaptchaToken) {
+      toast({
+        title: 'Помилка',
+        description: 'Будь ласка, пройдіть перевірку reCAPTCHA',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     setIsLoading(true);
     
     try {
-      const { error } = await signUp(registerData.email, registerData.password);
+      const { error } = await signUp(registerData.email, registerData.password, recaptchaToken);
       
       if (error) {
         if (error.message.includes('already registered')) {
@@ -265,10 +276,14 @@ export default function AuthPage() {
                     </div>
                   </div>
                   
+                  <div className="space-y-4">
+                    <ReCaptcha onChange={setRecaptchaToken} />
+                  </div>
+                  
                   <Button 
                     type="submit" 
                     className="w-full"
-                    disabled={isLoading}
+                    disabled={isLoading || !recaptchaToken}
                   >
                     {isLoading ? 'Реєструємо...' : 'Створити акаунт'}
                   </Button>
