@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useRegistration, RegistrationFormData } from '@/hooks/useRegistration';
 import { useToast } from '@/hooks/use-toast';
-import { ReCaptcha } from '@/components/ReCaptcha';
+import { MockReCaptcha } from '@/components/MockReCaptcha';
 import { 
   User, 
   Mail, 
@@ -723,7 +723,7 @@ export default function RegistrationPage() {
               </div>
 
               <div className="space-y-4">
-                <ReCaptcha onChange={setRecaptchaToken} />
+                <MockReCaptcha onChange={setRecaptchaToken} />
               </div>
 
               <Button 
