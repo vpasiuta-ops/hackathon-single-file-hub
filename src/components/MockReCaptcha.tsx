@@ -28,11 +28,17 @@ export const MockReCaptcha = ({ onChange }: MockReCaptchaProps) => {
   return (
     <div className="flex flex-col items-center gap-3 p-4 border border-border rounded-md bg-muted/30">
       <div className="text-center">
-        <p className="text-sm text-foreground-secondary mb-2">
-          Демо-версія reCAPTCHA для тестування
+        <p className="text-sm text-foreground-secondary mb-1">
+          ⚠️ Домен не налаштований для reCAPTCHA
         </p>
-        <p className="text-xs text-muted-foreground">
-          Натисніть кнопку нижче для імітації проходження перевірки
+        <p className="text-xs text-muted-foreground mb-2">
+          Поточний: {window.location.hostname}
+        </p>
+        <p className="text-xs text-muted-foreground mb-2">
+          Потрібен: hackathon-single-file-hub.lovable.app або *.lovableproject.com
+        </p>
+        <p className="text-xs text-foreground-secondary">
+          Тимчасова заміна для тестування:
         </p>
       </div>
       <Button 
@@ -40,7 +46,7 @@ export const MockReCaptcha = ({ onChange }: MockReCaptchaProps) => {
         variant="outline"
         size="sm"
       >
-        ✅ Я не робот
+        ✅ Я не робот (демо)
       </Button>
     </div>
   );
