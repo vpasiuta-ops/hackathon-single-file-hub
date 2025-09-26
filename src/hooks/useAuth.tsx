@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, !!session?.user);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .eq('user_id', session.user.id)
               .maybeSingle();
             
+            console.log('Profile loaded:', profileData);
             setProfile(profileData);
             setUserRole((profileData?.role as UserRole) || 'participant');
           }, 0);
@@ -69,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('user_id', session.user.id)
           .maybeSingle()
           .then(({ data: profileData }) => {
+            console.log('Initial profile loaded:', profileData);
             setProfile(profileData);
             setUserRole((profileData?.role as UserRole) || 'participant');
             setLoading(false);
@@ -81,6 +84,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Separate effect for real-time profile updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    console.log('Setting up real-time listener for user:', user.id);
+    
+    const profileChannel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Profile updated in real-time:', payload);
+          if (payload.new) {
+            const updatedProfile = payload.new as Profile;
+            setProfile(updatedProfile);
+            setUserRole((updatedProfile.role as UserRole) || 'participant');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up real-time listener');
+      supabase.removeChannel(profileChannel);
+    };
+  }, [user?.id]);
 
   const signUp = async (email: string, password: string, recaptchaToken: string) => {
     // First verify reCAPTCHA

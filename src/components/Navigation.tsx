@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useRefreshProfile } from "@/hooks/useRefreshProfile";
 import type { UserRole } from "@/types/auth";
 import { getRoleLabel, getRoleColor } from "@/types/auth";
 
@@ -30,6 +31,7 @@ export default function Navigation({ currentPage, onPageChange }: NavigationProp
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, profile, userRole, signOut } = useAuth();
   const { toast } = useToast();
+  const { refreshProfile } = useRefreshProfile();
 
   const handleSignOut = async () => {
     try {
@@ -117,7 +119,12 @@ export default function Navigation({ currentPage, onPageChange }: NavigationProp
                   <span>{profile?.first_name && profile?.last_name 
                     ? `${profile.first_name} ${profile.last_name}` 
                     : user.email}</span>
-                  <Badge className={getRoleColor(userRole)}>
+                  <Badge 
+                    className={getRoleColor(userRole)}
+                    onClick={refreshProfile}
+                    style={{ cursor: 'pointer' }}
+                    title="Натисніть для оновлення ролі"
+                  >
                     {getRoleLabel(userRole)}
                   </Badge>
                 </div>
