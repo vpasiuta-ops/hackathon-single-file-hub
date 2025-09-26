@@ -118,6 +118,30 @@ export type Database = {
           },
         ]
       }
+      hackathon_judges: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          hackathon_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          hackathon_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          hackathon_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hackathon_registrations: {
         Row: {
           hackathon_id: string
@@ -249,6 +273,7 @@ export type Database = {
           phone: string | null
           portfolio_url: string | null
           ready_to_lead: boolean | null
+          role: string | null
           roles: string[] | null
           skills: string[] | null
           team_description: string | null
@@ -275,6 +300,7 @@ export type Database = {
           phone?: string | null
           portfolio_url?: string | null
           ready_to_lead?: boolean | null
+          role?: string | null
           roles?: string[] | null
           skills?: string[] | null
           team_description?: string | null
@@ -301,6 +327,7 @@ export type Database = {
           phone?: string | null
           portfolio_url?: string | null
           ready_to_lead?: boolean | null
+          role?: string | null
           roles?: string[] | null
           skills?: string[] | null
           team_description?: string | null
