@@ -80,18 +80,18 @@ export default function Navigation({ currentPage, onPageChange }: NavigationProp
 
   return (
     <nav className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-md bg-card/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
-            <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <div className="flex-shrink-0 flex items-center min-w-0">
+            <div className="text-xl sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent truncate">
               HackHub
             </div>
           </div>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
+          {/* Desktop Menu - Hidden on tablets, shown on large screens */}
+          <div className="hidden lg:block">
+            <div className="flex items-baseline space-x-2 xl:space-x-4">
               {visibleMenuItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -100,60 +100,123 @@ export default function Navigation({ currentPage, onPageChange }: NavigationProp
                     variant={currentPage === item.id ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => handleMenuClick(item.id)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1 xl:gap-2 text-xs xl:text-sm px-2 xl:px-3"
                   >
-                    <Icon className="w-4 h-4" />
-                    {item.label}
+                    <Icon className="w-3 h-3 xl:w-4 xl:h-4 flex-shrink-0" />
+                    <span className="hidden xl:inline truncate">{item.label}</span>
+                    <span className="xl:hidden truncate">{item.label.split(' ')[0]}</span>
                   </Button>
                 );
               })}
             </div>
           </div>
 
-          {/* Auth & User Info */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Tablet Menu - Compact icons only */}
+          <div className="hidden md:flex lg:hidden items-center space-x-1">
+            {visibleMenuItems.slice(0, 4).map((item) => {
+              const Icon = item.icon;
+              return (
+                <Button
+                  key={item.id}
+                  variant={currentPage === item.id ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleMenuClick(item.id)}
+                  className="p-2"
+                  title={item.label}
+                >
+                  <Icon className="w-4 h-4" />
+                </Button>
+              );
+            })}
+          </div>
+
+          {/* Auth & User Info - Responsive */}
+          <div className="hidden sm:flex items-center space-x-2 lg:space-x-4 min-w-0">
             {user ? (
               <>
-                <div className="flex items-center space-x-2 text-sm text-foreground">
-                  <User className="w-4 h-4 text-foreground-secondary" />
-                  <span>{profile?.first_name && profile?.last_name 
-                    ? `${profile.first_name} ${profile.last_name}` 
-                    : user.email}</span>
+                {/* User Info - Responsive */}
+                <div className="flex items-center space-x-1 lg:space-x-2 text-xs lg:text-sm text-foreground min-w-0">
+                  <User className="w-3 h-3 lg:w-4 lg:h-4 text-foreground-secondary flex-shrink-0" />
+                  <span className="truncate max-w-20 sm:max-w-24 lg:max-w-32">
+                    {profile?.first_name && profile?.last_name 
+                      ? `${profile.first_name} ${profile.last_name}` 
+                      : user.email}
+                  </span>
                   <Badge 
-                    className={getRoleColor(userRole)}
+                    className={`${getRoleColor(userRole)} text-xs px-1 lg:px-2 cursor-pointer flex-shrink-0`}
                     onClick={refreshProfile}
-                    style={{ cursor: 'pointer' }}
                     title="Натисніть для оновлення ролі"
                   >
-                    {getRoleLabel(userRole)}
+                    <span className="hidden lg:inline">{getRoleLabel(userRole)}</span>
+                    <span className="lg:hidden">
+                      {userRole === 'captain' ? 'Кап.' : 
+                       userRole === 'judge' ? 'Суд.' :
+                       userRole === 'admin' ? 'Адм.' : 'Уч.'}
+                    </span>
                   </Badge>
                 </div>
 
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Вийти
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="p-1 lg:px-3 lg:py-2"
+                >
+                  <LogOut className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+                  <span className="hidden lg:inline">Вийти</span>
                 </Button>
               </>
             ) : (
-              <Button variant="default" size="sm" onClick={() => onPageChange('auth')}>
-                <LogIn className="w-4 h-4 mr-2" />
-                Увійти
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={() => onPageChange('auth')}
+                className="p-1 lg:px-3 lg:py-2"
+              >
+                <LogIn className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+                <span className="hidden lg:inline">Увійти</span>
               </Button>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="sm:hidden flex items-center">
+            {/* Mobile user indicator */}
+            {user && (
+              <Badge 
+                className={`${getRoleColor(userRole)} text-xs px-1 mr-2 cursor-pointer`}
+                onClick={refreshProfile}
+                title={getRoleLabel(userRole)}
+              >
+                {userRole === 'captain' ? 'К' : 
+                 userRole === 'judge' ? 'С' :
+                 userRole === 'admin' ? 'А' : 'У'}
+              </Badge>
+            )}
+            
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2"
             >
               {isMobileMenuOpen ? (
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               ) : (
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5" />
               )}
+            </Button>
+          </div>
+
+          {/* Tablet/Medium screen menu button */}
+          <div className="md:flex lg:hidden hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2"
+            >
+              <Settings className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -161,42 +224,53 @@ export default function Navigation({ currentPage, onPageChange }: NavigationProp
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-card border-t border-border">
-            {visibleMenuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Button
-                  key={item.id}
-                  variant={currentPage === item.id ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => {
-                    handleMenuClick(item.id);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full justify-start gap-2"
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                </Button>
-              );
-            })}
+        <div className="lg:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-card border-t border-border max-h-screen overflow-y-auto">
+            {/* Navigation Items */}
+            <div className="space-y-1">
+              {visibleMenuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={item.id}
+                    variant={currentPage === item.id ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => {
+                      handleMenuClick(item.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full justify-start gap-2 text-left"
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
 
-            {/* Mobile Auth Section */}
-            <div className="pt-4 mt-4 border-t border-border">
+            {/* Auth Section */}
+            <div className="pt-3 mt-3 border-t border-border space-y-2">
               {user ? (
                 <>
-                  <div className="px-3 py-2 text-sm text-foreground">
+                  {/* User Info in Mobile */}
+                  <div className="px-3 py-2 text-sm text-foreground bg-muted/50 rounded-md">
                     <div className="flex items-center gap-2 mb-2">
-                      <User className="w-4 h-4" />
-                      <span>{profile?.first_name && profile?.last_name 
-                        ? `${profile.first_name} ${profile.last_name}` 
-                        : user.email}</span>
+                      <User className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate font-medium">
+                        {profile?.first_name && profile?.last_name 
+                          ? `${profile.first_name} ${profile.last_name}` 
+                          : user.email}
+                      </span>
                     </div>
-                    <Badge className={getRoleColor(userRole)}>
+                    <Badge 
+                      className={`${getRoleColor(userRole)} text-xs cursor-pointer`}
+                      onClick={refreshProfile}
+                      title="Натисніть для оновлення ролі"
+                    >
                       {getRoleLabel(userRole)}
                     </Badge>
                   </div>
+                  
                   <Button
                     variant="outline"
                     size="sm"
@@ -204,7 +278,7 @@ export default function Navigation({ currentPage, onPageChange }: NavigationProp
                       handleSignOut();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full justify-start gap-2 mt-2"
+                    className="w-full justify-start gap-2"
                   >
                     <LogOut className="w-4 h-4" />
                     Вийти
