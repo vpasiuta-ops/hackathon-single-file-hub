@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Medal, Award, Crown, Star, ExternalLink, Github } from "lucide-react";
-import type { UserRole } from "@/data/mockData";
+import type { UserRole } from "@/types/auth";
 
 interface LeaderboardPageProps {
   currentRole: UserRole;

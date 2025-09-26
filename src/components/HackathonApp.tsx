@@ -13,7 +13,7 @@ import HackathonDetailsPage from "@/pages/HackathonDetailsPage";
 import RegistrationPage from "@/pages/RegistrationPage";
 import AdminPage from "@/pages/AdminPage";
 import { useAuth } from "@/hooks/useAuth";
-import type { UserRole } from "@/data/mockData";
+import type { UserRole } from "@/types/auth";
 
 interface HackathonAppProps {
   isAuthenticated: boolean;
@@ -30,9 +30,8 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
   
   // Start with correct page based on auth status
   const [currentPage, setCurrentPage] = useState(isAuthenticated ? 'hackathons' : 'home');
-  const [currentRole, setCurrentRole] = useState<UserRole>('guest');
   const [selectedHackathonId, setSelectedHackathonId] = useState<string | null>(null);
-  const { user, profile, loading } = useAuth();
+  const { user, profile, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
   // Handle authentication redirects
@@ -84,7 +83,7 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
       case 'home':
         return (
           <HomePage 
-            currentRole={currentRole}
+            currentRole={userRole}
             onPageChange={handlePageChange}
             onViewHackathon={handleViewHackathon}
           />
@@ -92,14 +91,14 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
       case 'hackathons':
         return (
           <HackathonsPage
-            currentRole={currentRole}
+            currentRole={userRole}
             onViewHackathon={handleViewHackathon}
           />
         );
       case 'participants':
         return (
           <ParticipantsPage
-            currentRole={currentRole}
+            currentRole={userRole}
           />
         );
       case 'teams':
@@ -113,21 +112,21 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
       case 'leaderboard':
         return (
           <LeaderboardPage
-            currentRole={currentRole}
+            currentRole={userRole}
           />
         );
       case 'hackathon-details':
         return (
           <HackathonDetailsPage
             hackathonId={selectedHackathonId}
-            currentRole={currentRole}
+            currentRole={userRole}
             onBack={() => handlePageChange('hackathons')}
           />
         );
       default:
         return (
           <HomePage 
-            currentRole={currentRole}
+            currentRole={userRole}
             onPageChange={handlePageChange}
             onViewHackathon={handleViewHackathon}
           />
@@ -152,8 +151,8 @@ export default function HackathonApp({ isAuthenticated }: HackathonAppProps) {
       <Navigation
         currentPage={currentPage}
         onPageChange={handlePageChange}
-        currentRole={currentRole}
-        onRoleChange={setCurrentRole}
+        currentRole={userRole}
+        onRoleChange={() => {}} // Role changes now handled by auth system
       />
       <main>
         {renderCurrentPage()}

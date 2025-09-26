@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, Filter, Plus, Loader2 } from "lucide-react";
 import HackathonCard from "@/components/HackathonCard";
 import { useHackathons, type DbHackathon } from "@/hooks/useHackathons";
-import type { UserRole } from "@/data/mockData";
+import type { UserRole } from "@/types/auth";
 
 interface HackathonsPageProps {
   currentRole: UserRole;
@@ -51,7 +51,7 @@ export default function HackathonsPage({ currentRole, onViewHackathon }: Hackath
               </p>
             </div>
             
-            {currentRole === 'organizer' && (
+            {currentRole === 'admin' && (
               <Button variant="default" size="lg">
                 <Plus className="w-4 h-4 mr-2" />
                 Створити хакатон

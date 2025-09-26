@@ -19,7 +19,7 @@ import {
   Loader2
 } from "lucide-react";
 import { useHackathon } from "@/hooks/useHackathons";
-import type { UserRole } from "@/data/mockData";
+import type { UserRole } from "@/types/auth";
 import { useAuth } from '@/hooks/useAuth';
 import { useTeams } from '@/hooks/useTeams';
 import { supabase } from '@/integrations/supabase/client';

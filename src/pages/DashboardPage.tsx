@@ -17,7 +17,7 @@ import {
   Star,
   Edit
 } from "lucide-react";
-import type { UserRole } from "@/data/mockData";
+import type { UserRole } from "@/types/auth";
 
 interface DashboardPageProps {
   currentRole: UserRole;
@@ -196,7 +196,7 @@ export default function DashboardPage({ currentRole, onRoleChange, onPageChange 
     );
   }
 
-  if (currentRole === 'organizer') {
+  if (currentRole === 'admin') {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="max-w-6xl mx-auto px-4">

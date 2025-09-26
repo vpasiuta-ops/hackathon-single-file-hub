@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Users, Target, Clock, Shield, Lightbulb, Code, Palette, Scale, CheckCircle, Calendar, MapPin, Trophy, Sparkles } from "lucide-react";
 import PartnerModal from "@/components/PartnerModal";
 import partnersLogos from "@/assets/partners-logos.png";
-import type { UserRole } from "@/data/mockData";
+import type { UserRole } from "@/types/auth";
 interface HomePageProps {
   currentRole: UserRole;
   onPageChange: (page: string) => void;

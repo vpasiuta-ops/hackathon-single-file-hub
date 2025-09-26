@@ -9,6 +9,7 @@ import AuthPage from "./pages/AuthPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import NotFound from "./pages/NotFound";
 import AdminPage from "./pages/AdminPage";
+import JudgingPage from "./pages/JudgingPage";
 import { AdminAuthProvider } from "./hooks/useAdminAuth";
 import RegistrationPage from "./pages/RegistrationPage";
 import TeamDetailPage from "./pages/TeamDetailPage";
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/register" element={<RegistrationPage />} />
               <Route path="/team/:teamId" element={<TeamDetailPage />} />
               <Route path="/participant/:userId" element={<ParticipantDetailPage />} />
+              <Route path="/judging" element={<JudgingPage />} />
               <Route path="/*" element={<Index />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

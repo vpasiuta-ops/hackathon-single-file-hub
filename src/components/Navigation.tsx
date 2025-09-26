@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import type { UserRole } from "@/data/mockData";
+import type { UserRole } from "@/types/auth";
+import { getRoleLabel, getRoleColor } from "@/types/auth";
 
 interface NavigationProps {
   currentPage: string;
@@ -25,38 +26,22 @@ interface NavigationProps {
   onRoleChange: (role: UserRole) => void;
 }
 
-const roleLabels: Record<UserRole, string> = {
-  participant: 'Учасник',
-  captain: 'Капітан команди',
-  judge: 'Суддя',
-  organizer: 'Організатор',
-  guest: 'Гість',
-};
-
-const roleColors: Record<UserRole, string> = {
-  participant: 'bg-blue-500',
-  captain: 'bg-purple-500', 
-  judge: 'bg-amber-500',
-  organizer: 'bg-green-500',
-  guest: 'bg-gray-500',
-};
-
-export default function Navigation({ currentPage, onPageChange, currentRole, onRoleChange }: NavigationProps) {
+export default function Navigation({ currentPage, onPageChange }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, userRole, signOut } = useAuth();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
     try {
       await signOut();
       toast({
-        title: 'Успішно!',
-        description: 'Ви вийшли з системи'
+        title: 'Успішно',
+        description: 'Ви вийшли з системи',
       });
     } catch (error) {
       toast({
         title: 'Помилка',
-        description: 'Сталася помилка при виході',
+        description: 'Не вдалося вийти з системи',
         variant: 'destructive'
       });
     }
@@ -69,14 +54,27 @@ export default function Navigation({ currentPage, onPageChange, currentRole, onR
     { id: 'teams', label: 'Команди', icon: UserCheck, public: false },
     { id: 'dashboard', label: 'Профіль', icon: User, public: false },
     { id: 'leaderboard', label: 'Лідерборд', icon: Trophy, public: false },
+    { id: 'judging', label: 'Кабінет судді', icon: Settings, public: false, roles: ['judge'] },
   ];
 
-  // Filter menu items based on authentication status
+  // Filter menu items based on authentication status and user role
   const visibleMenuItems = user 
-    ? menuItems 
+    ? menuItems.filter(item => {
+        if (item.roles && item.roles.length > 0) {
+          return item.roles.includes(userRole);
+        }
+        return true;
+      })
     : menuItems.filter(item => item.public);
 
-  const roles: UserRole[] = ['participant', 'captain', 'judge', 'organizer'];
+  const handleMenuClick = (itemId: string) => {
+    if (itemId === 'judging') {
+      // Navigate to /judging route
+      window.location.href = '/judging';
+      return;
+    }
+    onPageChange(itemId);
+  };
 
   return (
     <nav className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-md bg-card/80">
@@ -99,7 +97,7 @@ export default function Navigation({ currentPage, onPageChange, currentRole, onR
                     key={item.id}
                     variant={currentPage === item.id ? "secondary" : "ghost"}
                     size="sm"
-                    onClick={() => onPageChange(item.id)}
+                    onClick={() => handleMenuClick(item.id)}
                     className="flex items-center gap-2"
                   >
                     <Icon className="w-4 h-4" />
@@ -110,41 +108,20 @@ export default function Navigation({ currentPage, onPageChange, currentRole, onR
             </div>
           </div>
 
-          {/* Auth & Role Switcher */}
+          {/* Auth & User Info */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <>
-                {/* User Info */}
                 <div className="flex items-center space-x-2 text-sm text-foreground">
                   <User className="w-4 h-4 text-foreground-secondary" />
-                  <span>
-                    {profile?.first_name && profile?.last_name 
-                      ? `${profile.first_name} ${profile.last_name}` 
-                      : user.email}
-                  </span>
+                  <span>{profile?.first_name && profile?.last_name 
+                    ? `${profile.first_name} ${profile.last_name}` 
+                    : user.email}</span>
+                  <Badge className={getRoleColor(userRole)}>
+                    {getRoleLabel(userRole)}
+                  </Badge>
                 </div>
 
-                {/* Role Switcher */}
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-foreground-secondary">Роль:</span>
-                  <div className="flex gap-2">
-                    {roles.map((role) => (
-                      <button
-                        key={role}
-                        onClick={() => onRoleChange(role)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                          currentRole === role
-                            ? `${roleColors[role]} text-white shadow-md`
-                            : 'bg-secondary hover:bg-secondary-hover text-secondary-foreground'
-                        }`}
-                      >
-                        {roleLabels[role]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sign Out Button */}
                 <Button variant="outline" size="sm" onClick={handleSignOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Вийти
@@ -162,106 +139,88 @@ export default function Navigation({ currentPage, onPageChange, currentRole, onR
           <div className="md:hidden">
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
+                <X className="w-6 h-6" />
               ) : (
-                <Menu className="h-6 w-6" />
+                <Menu className="w-6 h-6" />
               )}
             </Button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {visibleMenuItems.map((item) => {
-                const Icon = item.icon;
-                return (
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-card border-t border-border">
+            {visibleMenuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Button
+                  key={item.id}
+                  variant={currentPage === item.id ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    handleMenuClick(item.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full justify-start gap-2"
+                >
+                  <Icon className="w-4 h-4" />
+                  {item.label}
+                </Button>
+              );
+            })}
+
+            {/* Mobile Auth Section */}
+            <div className="pt-4 mt-4 border-t border-border">
+              {user ? (
+                <>
+                  <div className="px-3 py-2 text-sm text-foreground">
+                    <div className="flex items-center gap-2 mb-2">
+                      <User className="w-4 h-4" />
+                      <span>{profile?.first_name && profile?.last_name 
+                        ? `${profile.first_name} ${profile.last_name}` 
+                        : user.email}</span>
+                    </div>
+                    <Badge className={getRoleColor(userRole)}>
+                      {getRoleLabel(userRole)}
+                    </Badge>
+                  </div>
                   <Button
-                    key={item.id}
-                    variant={currentPage === item.id ? "secondary" : "ghost"}
+                    variant="outline"
                     size="sm"
                     onClick={() => {
-                      onPageChange(item.id);
+                      handleSignOut();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full justify-start flex items-center gap-2"
+                    className="w-full justify-start gap-2 mt-2"
                   >
-                    <Icon className="w-4 h-4" />
-                    {item.label}
+                    <LogOut className="w-4 h-4" />
+                    Вийти
                   </Button>
-                );
-              })}
-              
-              {/* Mobile Auth & Role Section */}
-              <div className="pt-4 border-t border-border">
-                {user ? (
-                  <div className="space-y-4">
-                    {/* User Info */}
-                    <div className="flex items-center space-x-2 text-sm text-foreground">
-                      <User className="w-4 h-4 text-foreground-secondary" />
-                      <span>
-                        {profile?.first_name && profile?.last_name 
-                          ? `${profile.first_name} ${profile.last_name}` 
-                          : user.email}
-                      </span>
-                    </div>
-
-                    {/* Role Switcher */}
-                    <div>
-                      <div className="text-sm text-foreground-secondary mb-2">Переглянути як:</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {roles.map((role) => (
-                          <button
-                            key={role}
-                            onClick={() => onRoleChange(role)}
-                            className={`px-3 py-2 rounded-md text-xs font-medium transition-all ${
-                              currentRole === role
-                                ? `${roleColors[role]} text-white shadow-md`
-                                : 'bg-secondary hover:bg-secondary-hover text-secondary-foreground'
-                            }`}
-                          >
-                            {roleLabels[role]}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Sign Out Button */}
-                    <Button 
-                      variant="outline" 
-                      className="w-full" 
-                      onClick={() => {
-                        handleSignOut();
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Вийти
-                    </Button>
-                  </div>
-                ) : (
-                  <Button 
-                    variant="default" 
-                    className="w-full" 
-                    onClick={() => {
-                      onPageChange('auth');
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Увійти
-                  </Button>
-                )}
-              </div>
+                </>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    onPageChange('auth');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full justify-start gap-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Увійти
+                </Button>
+              )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   );
 }

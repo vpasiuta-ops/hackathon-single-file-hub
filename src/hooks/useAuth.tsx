@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import type { UserRole } from '@/types/auth';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -9,12 +10,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  userRole: UserRole;
   loading: boolean;
   signUp: (email: string, password: string, recaptchaToken: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: any }>;
   completeProfile: (data: Partial<Profile>) => Promise<{ error: any }>;
+  updateUserRole: (newRole: UserRole) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>('guest');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,9 +46,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .maybeSingle();
             
             setProfile(profileData);
+            setUserRole((profileData?.role as UserRole) || 'participant');
           }, 0);
         } else {
           setProfile(null);
+          setUserRole('guest');
         }
         
         setLoading(false);
@@ -64,9 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .maybeSingle()
           .then(({ data: profileData }) => {
             setProfile(profileData);
+            setUserRole((profileData?.role as UserRole) || 'participant');
             setLoading(false);
           });
       } else {
+        setUserRole('guest');
         setLoading(false);
       }
     });
@@ -132,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
       
       setProfile(profileData);
+      setUserRole((profileData?.role as UserRole) || 'participant');
     }
     
     return { error };
@@ -146,17 +155,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return updateProfile(profileData);
   };
 
+  const updateUserRole = async (newRole: UserRole) => {
+    if (!user) return { error: 'No user found' };
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role: newRole })
+      .eq('user_id', user.id);
+    
+    if (!error) {
+      setUserRole(newRole);
+      // Refetch profile to get updated data
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setProfile(profileData);
+    }
+    
+    return { error };
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       session,
       profile,
+      userRole,
       loading,
       signUp,
       signIn,
       signOut,
       updateProfile,
-      completeProfile
+      completeProfile,
+      updateUserRole
     }}>
       {children}
     </AuthContext.Provider>
