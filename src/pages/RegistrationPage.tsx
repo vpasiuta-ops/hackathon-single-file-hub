@@ -10,8 +10,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useRegistration, RegistrationFormData } from '@/hooks/useRegistration';
 import { useToast } from '@/hooks/use-toast';
-import { ReCaptcha } from '@/components/ReCaptcha';
-import { 
+// import { ReCaptcha } from '@/components/ReCaptcha'; // Тимчасово вимкнено для тестування
+import {
   User, 
   Mail, 
   Users, 
@@ -227,14 +227,15 @@ export default function RegistrationPage() {
       return;
     }
 
-    if (!recaptchaToken) {
-      toast({
-        title: 'Помилка',
-        description: 'Будь ласка, пройдіть перевірку reCAPTCHA',
-        variant: 'destructive'
-      });
-      return;
-    }
+    // Тимчасово вимкнено для тестування
+    // if (!recaptchaToken) {
+    //   toast({
+    //     title: 'Помилка',
+    //     description: 'Будь ласка, пройдіть перевірку reCAPTCHA',
+    //     variant: 'destructive'
+    //   });
+    //   return;
+    // }
 
     if (!token) return;
 
@@ -722,14 +723,15 @@ export default function RegistrationPage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              {/* Тимчасово вимкнено для тестування */}
+              {/* <div className="space-y-4">
                 <ReCaptcha onChange={setRecaptchaToken} />
-              </div>
+              </div> */}
 
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={isSubmitting || loading || !recaptchaToken}
+                disabled={isSubmitting || loading}
                 size="lg"
               >
                 {isSubmitting ? 'Завершуємо реєстрацію...' : 'Завершити реєстрацію'}
