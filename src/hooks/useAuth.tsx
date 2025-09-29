@@ -12,7 +12,7 @@ interface AuthContextType {
   profile: Profile | null;
   userRole: UserRole;
   loading: boolean;
-  signUp: (email: string, password: string, recaptchaToken: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: any }>;
@@ -118,21 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user?.id]);
 
-  const signUp = async (email: string, password: string, recaptchaToken: string) => {
-    // First verify reCAPTCHA
-    try {
-      const { data: verifyResult } = await supabase.functions.invoke('verify-recaptcha', {
-        body: { recaptchaToken }
-      });
-
-      if (!verifyResult?.success) {
-        return { error: new Error('reCAPTCHA verification failed') };
-      }
-    } catch (error) {
-      console.error('reCAPTCHA verification error:', error);
-      return { error: new Error('reCAPTCHA verification failed') };
-    }
-
+  const signUp = async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
