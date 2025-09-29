@@ -21,7 +21,6 @@ export interface RegistrationFormData {
   privacy_policy: boolean;
   participation_rules: boolean;
   email_notifications: boolean;
-  recaptchaToken?: string;
 }
 
 export const useRegistration = () => {
@@ -85,23 +84,7 @@ export const useRegistration = () => {
   const completeRegistration = async (token: string, formData: RegistrationFormData) => {
     setLoading(true);
     try {
-      // First verify reCAPTCHA if token provided
-      if (formData.recaptchaToken) {
-        try {
-          const { data: verifyResult } = await supabase.functions.invoke('verify-recaptcha', {
-            body: { recaptchaToken: formData.recaptchaToken }
-          });
-
-          if (!verifyResult?.success) {
-            throw new Error('reCAPTCHA verification failed');
-          }
-        } catch (error) {
-          console.error('reCAPTCHA verification error:', error);
-          throw new Error('reCAPTCHA verification failed');
-        }
-      }
-
-      // First, mark the token as used
+      // Mark the token as used
       const { error: tokenError } = await supabase
         .from('registration_tokens')
         .update({ used_at: new Date().toISOString() })

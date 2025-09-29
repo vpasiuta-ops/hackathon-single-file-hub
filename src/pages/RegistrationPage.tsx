@@ -10,7 +10,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useRegistration, RegistrationFormData } from '@/hooks/useRegistration';
 import { useToast } from '@/hooks/use-toast';
-// import { ReCaptcha } from '@/components/ReCaptcha'; // Тимчасово вимкнено для тестування
 import {
   User, 
   Mail, 
@@ -80,7 +79,6 @@ export default function RegistrationPage() {
   const [newSkill, setNewSkill] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -227,21 +225,10 @@ export default function RegistrationPage() {
       return;
     }
 
-    // Тимчасово вимкнено для тестування
-    // if (!recaptchaToken) {
-    //   toast({
-    //     title: 'Помилка',
-    //     description: 'Будь ласка, пройдіть перевірку reCAPTCHA',
-    //     variant: 'destructive'
-    //   });
-    //   return;
-    // }
-
     if (!token) return;
 
     setIsSubmitting(true);
-    const formDataWithCaptcha = { ...formData, recaptchaToken };
-    const result = await completeRegistration(token, formDataWithCaptcha);
+    const result = await completeRegistration(token, formData);
     
     if (result.success) {
       navigate('/auth');
@@ -723,12 +710,7 @@ export default function RegistrationPage() {
                 </div>
               </div>
 
-              {/* Тимчасово вимкнено для тестування */}
-              {/* <div className="space-y-4">
-                <ReCaptcha onChange={setRecaptchaToken} />
-              </div> */}
-
-              <Button 
+              <Button
                 type="submit" 
                 className="w-full"
                 disabled={isSubmitting || loading}
